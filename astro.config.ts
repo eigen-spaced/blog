@@ -3,10 +3,13 @@ import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
 import remarkToc from "remark-toc";
 import remarkCollapse from "remark-collapse";
+import cloudflare from "@astrojs/cloudflare";
+
 import { SITE } from "./src/config";
 
 // https://astro.build/config
 export default defineConfig({
+  adapter: cloudflare(),
   site: SITE.website,
   integrations: [
     sitemap({
