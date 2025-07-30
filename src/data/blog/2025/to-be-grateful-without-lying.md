@@ -24,7 +24,7 @@ Only, this doesn't really bring any lasting relief. Nothing has changed, if anyt
 
 There is a beautiful excerpt from the book "When Things Fall Apart" by Pema Chödrön that cuts through it:
 
-> I have a friend dying of AIDS. Before, I was leaving for a trip, we were talking. He said, "I didn't want this, and I hated this, and I was terrified of this. But it turns out that this illness has been my greatest gift." He sad, "Now every moment is so previous to me. My whole life means so much to me." Something had really changed and he felt that was horrifying and scary had turned into a gift.
+> I have a friend dying of AIDS. Before, I was leaving for a trip, we were talking. He said, "I didn't want this, and I hated this, and I was terrified of this. But it turns out that this illness has been my greatest gift." He said, "Now every moment is so previous to me. My whole life means so much to me." Something had really changed and he felt that was horrifying and scary had turned into a gift.
 
 What draws me to this is the fact that many people would see having AIDS as the ultimate loss - having everything taken from them. And yet, the friend realised if anything, it was a gift! The gratitude wasn't forced. It just came naturally, as an extension of the grieving process, and feeling the pain and anguish, do you come out the other side.
 
