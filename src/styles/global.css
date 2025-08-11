@@ -54,6 +54,16 @@ html[data-theme="dark"] {
   }
 }
 
+@utility max-w-app {
+  @apply max-w-3xl;
+}
+
 .active-nav {
   @apply underline decoration-2 underline-offset-4;
+}
+
+/* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */
+/* Anything that has been anchored to should have extra scroll margin */
+:target {
+  scroll-margin-block: 1rem;
 }
