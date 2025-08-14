@@ -67,3 +67,14 @@ html[data-theme="dark"] {
 :target {
   scroll-margin-block: 1rem;
 }
+
+/* Resume styles only */
+.two-col-stack {
+  @apply block sm:flex sm:justify-between sm:gap-4 mb-[1.25rem];
+}
+.primary-content {
+  @apply flex-1 min-w-0;
+}
+.secondary-content {
+  @apply flex-shrink-0 mt-1 sm:mt-0 sm:text-right;
+}
