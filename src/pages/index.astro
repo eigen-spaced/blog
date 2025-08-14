@@ -24,13 +24,14 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
   <Header />
   <main id="main-content" data-layout="index">
     <section id="hero" class="pt-8 pb-6">
-      <h1 id="greeting" class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl">
+      <h1
+        id="greeting"
+        class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl"
+      >
         Namaste
       </h1>
 
-      <p>
-        I'm Sunny. I think across domains
-      </p>
+      <p>I'm Sunny. I think across domains</p>
       {
         // only display if at least one social link is enabled
         SOCIALS.length > 0 && (
@@ -92,26 +93,34 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
       sessionStorage.setItem("backUrl", "/");
     }
 
-    const greetings = ["Hello", "Namaste", "Wominjeka", "Hola", "Bonjour", "Ciao", "Guten Tag"]; // Add more greetings as you like
+    const greetings = [
+      "Hello",
+      "Namaste",
+      "Wominjeka",
+      "Hola",
+      "Bonjour",
+      "Ciao",
+      "Guten Tag",
+    ]; // Add more greetings as you like
     let currentGreetingIndex = 0;
     const greetingElement = document.getElementById("greeting");
 
     if (greetingElement) {
-    greetingElement.textContent = greetings[currentGreetingIndex];
-    setInterval(() => {
-      // 1. Fade out the current greeting
-      greetingElement.style.opacity = "0";
+      greetingElement.textContent = greetings[currentGreetingIndex];
+      setInterval(() => {
+        // 1. Fade out the current greeting
+        greetingElement.style.opacity = "0";
 
-      // Wait for the fade-out to complete before changing text and fading in
-      setTimeout(() => {
-        currentGreetingIndex = (currentGreetingIndex + 1) % greetings.length;
-        greetingElement.textContent = greetings[currentGreetingIndex];
+        // Wait for the fade-out to complete before changing text and fading in
+        setTimeout(() => {
+          currentGreetingIndex = (currentGreetingIndex + 1) % greetings.length;
+          greetingElement.textContent = greetings[currentGreetingIndex];
 
-        // 2. Fade in the new greeting
-        greetingElement.style.opacity = "1";
-      }, 500); // Match this duration to the CSS transition duration
-    }, 2000);
-  }
+          // 2. Fade in the new greeting
+          greetingElement.style.opacity = "1";
+        }, 500); // Match this duration to the CSS transition duration
+      }, 2000);
+    }
   });
 </script>
 
