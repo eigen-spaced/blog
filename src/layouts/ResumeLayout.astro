@@ -25,3 +25,40 @@ const { frontmatter } = Astro.props;
   </main>
   <Footer />
 </Layout>
+
+<style is:global>
+  @reference '../styles/global.css';
+
+  .pastel-holographic {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(
+      90deg,
+      #ffb3e6,
+      #ffb3ba,
+      #ffd1ba,
+      #fff5ba,
+      #baffc9,
+      #bae1ff,
+      #d4baff,
+      #ffb3e6,
+      #ffb3ba,
+      #ffd1ba,
+      #fff5ba
+    );
+    background-size: 300% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: pastel-flow 6s linear infinite;
+  }
+
+  @keyframes pastel-flow {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 300% 0%;
+    }
+  }
+</style>

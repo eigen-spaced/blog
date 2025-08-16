@@ -41,10 +41,10 @@ management, compliance, and cybersecurity. Experienced in delivering scalable di
 
 # Experience
 
-<div class="not-prose two-col-stack">
+<div class="not-prose two-col-stack pastel-holographic">
     <div class="primary-content">
+        <p>Technical Assistance Officer</p>
         <p>TasCollege</p>
-        <p class="italic">Technical Assistance Officer</p>
     </div>
     <div class="secondary-content">
         <p>Sep. 2024 – Jun. 2025</p>
@@ -52,24 +52,29 @@ management, compliance, and cybersecurity. Experienced in delivering scalable di
     </div>
 </div>
 
-- Managed the secure handling, printing, and distribution of official student documents (certificates, ID cards), ensuring accuracy, confidentiality, and compliance with institutional data protection policies.
+- Managed the secure handling, printing, and distribution of official student documents (certificates, ID cards), ensuring accuracy, confidentiality, and compliance with institutional data protection policies. Oversaw the proper disposal of confidential paperwork, ensuring compliance with document retention and destruction policies.
 
 - Led digitisation efforts, reducing paperwork by 16% and streamlining data collection processes for improved efficiency and compliance.
 - Provided frontline IT troubleshooting, resolving classroom technology issues, printer malfunctions, driver installations, and device connectivity problems to maintain operational continuity.
 
-- Oversaw the proper disposal of confidential paperwork, ensuring compliance with document retention and destruction policies.
-
 - Advocated for and contributed to the successful adoption of a ticketing system, improving issue tracking, accountability, and resolution efficiency.
 
-- **Excel Automation for Asset Tracking**: The institution was managing multiple asset tracking spreadsheets (inventory, building access cards, and other resources) that were prone to inconsistencies and missing data due to manual double-entry. I redesigned these systems using formulas and linked tables to automate data updates across multiple tracking categories. When items were checked out or returned, one entry would automatically update master inventories, eliminating the need for separate manual updates and significantly reducing tracking errors across all asset types.
+### Excel Automation for Asset Tracking
 
-- **Attendance System Digital Transformation**: Trainers were submitting paper attendance sheets that front desk staff had to manually enter into the system, creating bottlenecks and errors. I pushed through a digital transition that had been talked about but never implemented, creating training materials and providing hands-on support during rollout. This eliminated the manual data entry burden by 30% and improved attendance accuracy since trainers became directly responsible for their own data.
+The institution was managing multiple asset tracking spreadsheets (inventory, building access cards, and other resources) that were prone to inconsistencies and missing data due to manual double-entry. I redesigned these systems using formulas and linked tables to automate data updates across multiple tracking categories. When items were checked out or returned, one entry would automatically update master inventories, eliminating the need for separate manual updates and significantly reducing tracking errors across all asset types.
+
+### Attendance System Digital Transformation
+
+Trainers were submitting paper attendance sheets that front desk staff had to manually enter into the system, creating bottlenecks and errors. I pushed through a digital transition that had been talked about but never implemented, creating training materials and providing hands-on support during rollout. This eliminated the manual data entry burden by 30% and improved attendance accuracy since trainers became directly responsible for their own data.
+
 - Drafted and managed email communications with students, handling follow-ups, course-related support, and guidance while ensuring clarity and professionalism.
 
-<div class="not-prose two-col-stack">
+<br>
+
+<div class="not-prose two-col-stack pastel-holographic">
     <div class="primary-content">
+        <p>Associate Software Developer</p>
         <p>Publicis Sapient</p>
-        <p class="italic">Associate Software Developer</p>
     </div>
     <div class="secondary-content">
         <p>Mar. 2022 – Jul. 2025</p>
@@ -77,19 +82,33 @@ management, compliance, and cybersecurity. Experienced in delivering scalable di
     </div>
 </div>
 
+### Azure Pipeline
+
 - Designed & implemented a secure data workflow for migrating on-premises data to Azure Cloud, ensuring data integrity, compliance with cloud security best practices, and seamless reporting in Power BI.
 
-- Collaborated with development team to build a secure frontend interface for NAB to integrate into their Adobe Campaign Classic backend, enhancing data governance and streamlining UI workflows, reducing time-to-deploy by 27%.
+### NAB Frontend Integration
 
-- Led quality assurance testing for a client web and mobile application, achieving 60-75% test coverage, identifying potential compliance risks, and improving software resilience against security threats.
+- Working as the frontend developer on a cross-functional team, I translated Figma designs into a secure customer-facing interface that integrated with NAB's Adobe Campaign Classic backend. I collaborated with the backend team handling the Adobe Campaign integration and worked iteratively with a UI tester to ensure functionality matched design specifications. The streamlined development workflow we established reduced deployment time by 27%, allowing NAB to launch ahead of schedule.
 
-- Conducted risk analysis and recommended cost-effective OSS security solutions for University of NewCastle NSW, reducing project delivery time by 3 months while meeting data security requirements.
+- This project taught me how frontend implementations in regulated industries require careful consideration of both user experience and compliance requirements—experience that now informs my understanding of how technical decisions impact risk and regulatory obligations.
 
-- Proposed a systems solution for University of Newcastle who wanted to build a platform that was cost-friendly and could be delivered in the least amount of time. Technology proposals included either OSS solutions or using currently existing OSS solutions and modifying them to suit the client’s needs. The client was very impressed with the final result and overall team effort which reduced delivery by 3 months as opposed to an estimated 1 year.
+### QA Testing Implementation & Leadership
 
-- Facilitated security & risk awareness training through monthly “Lunch and Learn” sessions, fostering a collaborative learning environment focused on Software Developement best practices and IT Security awareness
+- Taking on QA leadership for the first time on a client web and mobile application project, I designed and implemented testing pipelines from scratch. The mobile testing proved particularly challenging since the team was using React Native and proper testing libraries weren't well-established at the time, requiring creative solutions to achieve comprehensive coverage. Through systematic testing approach, I achieved 60-75% test coverage across both platforms, identifying potential vulnerabilities and compliance gaps that could have created significant issues in production.
 
-# Projects
+- This hands-on experience taught me how thorough testing serves as a critical control mechanism—catching not just functional bugs but potential security and compliance risks before they reach users. Understanding the relationship between testing rigor and risk mitigation is now central to how I think about operational controls and quality assurance.
+
+### University of Newcastle Systems Consultation
+
+- As part of the consulting team for University of Newcastle, I conducted risk analysis of various technology approaches and recommended open-source security solutions that would balance cost efficiency with rapid delivery while maintaining data security standards. My proposals focused on leveraging existing OSS solutions and modifying them to fit their specific needs rather than building from scratch, requiring evaluation of security implications and integration requirements within their existing infrastructure.
+
+- The solution we delivered reduced the project timeline from an estimated 12 months to 9 months while staying within budget and meeting all data security requirements. This experience taught me how technical architecture decisions directly impact project risk—both in terms of delivery timelines and security compliance—understanding these trade-offs is now fundamental to how I approach risk assessment in any technology implementation.
+
+### Knowledge Sharing and Security Best Practices Session Facilitation
+
+- These informal sessions covered a range of topics from development methodologies and tools to security considerations and coding practices, creating a collaborative learning environment where knowledge sharing became part of our team culture. The format encouraged open discussion about both technical solutions and potential security implications, helping the team stay current with industry developments while building awareness around secure development practices.
+</div>
+
 
 ## Interactive Team Statistics Dashboard
 Tech stack: *Nextjs, MongoDB, Zustand*
