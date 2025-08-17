@@ -7,7 +7,7 @@ tags:
   - spirituality
 ---
 
-![Quote and comment from Reddit](@/assets/images/to-be-grateful-without-lying-img.jpg)
+![Quote and comment from Reddit](@/assets/blog-images/to-be-grateful-without-lying-img.jpg)
 
 The comment above following this post on Reddit made me chuckle. I realised that through the contrast: both the quote and the comment are two entirely different ways of seeing the world. And this got me thinking about the modern perception of gratitude.
 
