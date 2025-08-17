@@ -34,23 +34,23 @@ const { frontmatter } = Astro.props;
     font-weight: bold;
     background: linear-gradient(
       90deg,
-      #ffb3e6,
-      #ffb3ba,
-      #ffd1ba,
-      #fff5ba,
-      #baffc9,
-      #bae1ff,
-      #d4baff,
-      #ffb3e6,
-      #ffb3ba,
-      #ffd1ba,
-      #fff5ba
+      #ff4081,
+      #ff6b35,
+      #ffa726,
+      #66bb6a,
+      #42a5f5,
+      #ab47bc,
+      #7e57c2,
+      #ff4081,
+      #ff6b35,
+      #ffa726,
+      #66bb6a
     );
     background-size: 300% 100%;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: pastel-flow 6s linear infinite;
+    animation: pastel-flow 9s linear infinite;
   }
 
   @keyframes pastel-flow {
@@ -59,6 +59,45 @@ const { frontmatter } = Astro.props;
     }
     100% {
       background-position: 300% 0%;
+    }
+  }
+
+  .dancing-spirit {
+    animation: dance 1s ease-in-out infinite;
+  }
+
+  .dancing-spirit:nth-child(1) {
+    animation-delay: 1.1s;
+    animation-duration: 1.9s;
+  }
+  .dancing-spirit:nth-child(2) {
+    animation-delay: 0s;
+    animation-duration: 2.1s;
+  }
+  .dancing-spirit:nth-child(3) {
+    animation-delay: 0.7s;
+    animation-duration: 2.3s;
+  }
+  .dancing-spirit:nth-child(4) {
+    animation-delay: 0.3s;
+    animation-duration: 1.8s;
+  }
+  .dancing-spirit:nth-child(5) {
+    animation-delay: 0.5s;
+    animation-duration: 2.2s;
+  }
+
+  @keyframes dance {
+    0%,
+    45% {
+      transform: rotate(-15deg);
+    }
+    50%,
+    95% {
+      transform: rotate(15deg);
+    }
+    100% {
+      transform: rotate(-15deg);
     }
   }
 </style>
