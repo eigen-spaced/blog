@@ -3,12 +3,16 @@ layout: ../layouts/ResumeLayout.astro
 title: "Resume"
 ---
 import { Image } from "astro:assets";
+
 import croc from "@/assets/resume/Croc.svg";
 import koala from "@/assets/resume/Koala.svg";
 import kangaroo from "@/assets/resume/Kangaroo.svg";
 import quokka from "@/assets/resume/Quokka.svg";
 import spider from "@/assets/resume/Spider.svg";
 
+import secplus from "@/assets/resume/secplus.png";
+import aiess from "@/assets/resume/aiess.png";
+import az900 from "@/assets/resume/az900.png";
 
 # Summary
 
@@ -59,12 +63,17 @@ management, compliance, and cybersecurity. Experienced in delivering scalable di
     </div>
 </div>
 
-- Managed the secure handling, printing, and distribution of official student documents (certificates, ID cards), ensuring accuracy, confidentiality, and compliance with institutional data protection policies. Oversaw the proper disposal of confidential paperwork, ensuring compliance with document retention and destruction policies.
+### Document Security & Compliance Management
 
-- Led digitisation efforts, reducing paperwork by 16% and streamlining data collection processes for improved efficiency and compliance.
-- Provided frontline IT troubleshooting, resolving classroom technology issues, printer malfunctions, driver installations, and device connectivity problems to maintain operational continuity.
+The institution was handling sensitive student documents through ad-hoc processes that created potential data protection risks and inconsistent handling procedures. I established secure protocols for printing, distributing, and disposing of official certificates and ID cards, ensuring compliance with institutional data protection policies and document retention requirements. This systematic approach eliminated compliance gaps while maintaining the confidentiality and accuracy standards required for official student records.
 
-- Advocated for and contributed to the successful adoption of a ticketing system, improving issue tracking, accountability, and resolution efficiency.
+### Process Digitization Initiative
+
+Manual paperwork processes were creating inefficiencies and potential compliance issues across multiple departments. I led digitization efforts that streamlined data collection workflows, reducing overall paperwork by 16% while strengthening compliance controls. This transition improved both operational efficiency and data integrity by eliminating manual transcription errors.
+
+### IT Systems Advocacy & Implementation
+
+The organization lacked systematic tracking for technical issues, creating accountability gaps and inefficient resolution processes. I identified this operational risk and advocated for implementing a ticketing system, contributing to its successful adoption. This change improved issue tracking, established clear accountability measures, and created audit trails for technical support activities.
 
 ### Excel Automation for Asset Tracking
 
@@ -74,7 +83,8 @@ The institution was managing multiple asset tracking spreadsheets (inventory, bu
 
 Trainers were submitting paper attendance sheets that front desk staff had to manually enter into the system, creating bottlenecks and errors. I pushed through a digital transition that had been talked about but never implemented, creating training materials and providing hands-on support during rollout. This eliminated the manual data entry burden by 30% and improved attendance accuracy since trainers became directly responsible for their own data.
 
-- Drafted and managed email communications with students, handling follow-ups, course-related support, and guidance while ensuring clarity and professionalism.
+### IT Support & Student Communications Management
+The college's support desk was handling ad-hoc technology issues and student inquiries without standardized processes, leading to inconsistent response times and communication gaps. I established systematic troubleshooting workflows for classroom technology, printers, and device connectivity while developing templated communication protocols for student follow-ups and course support. This dual approach reduced repeat tickets by creating clearer initial guidance and improved student satisfaction through more professional, consistent messaging across all touchpoints.
 
 <br />
 
@@ -144,23 +154,19 @@ for data-driven decision-making.
 
 # Certifications
 
-<div class="not-prose two-col-stack">
-    <div class="primary-content">
-        <p class="text-xl">Azure AZ-900</p>
-        <p class="italic">Microsoft</p>
-    </div>
-    <div class="secondary-content">
-        <p>Aug 2022</p>
-<a class="underline decoration-dotted" href="https://learn.microsoft.com/api/credentials/share/en-us/SaneyarKhazin-9111/B4B23538D3E5F262?sharingId=78EB419E979A66CF">View Certificate</a>
-    </div>
-</div>
+<div class="flex justify-around">
+  <div class="flex flex-col">
+    <Image src={secplus} alt="Security+ badge" class="w-36 h-36 object-cover" />
+    <a class="underline decoration-dotted" href="https://www.credly.com/badges/38ee5501-0a9f-46b9-8af0-180fb9e16288/linked_in_profile">View Certificate</a>
+  </div>
 
-<div class="not-prose two-col-stack">
-    <div class="primary-content">
-        <p class="text-xl">Security+ SY0-701</p>
-        <p class="italic">CompTIA</p>
-    </div>
-    <div class="secondary-content">
-        <p>(In Progress)</p>
-    </div>
+  <div class="flex flex-col">
+    <Image src={aiess} alt="Google AI Essentials badge" class="w-36 h-36 object-cover"/>
+    <a class="underline decoration-dotted" href="https://www.coursera.org/account/accomplishments/specialization/A67B4YS915W5">View Certificate</a>
+  </div>
+
+  <div class="flex flex-col">
+    <Image src={az900} alt="AZ-900 badge" class="w-36 h-36 object-cover" />
+<a class="underline decoration-dotted" href="https://learn.microsoft.com/api/credentials/share/en-us/SaneyarKhazin-9111/B4B23538D3E5F262?sharingId=78EB419E979A66CF">View Certificate</a>
+  </div>
 </div>
