@@ -37,7 +37,7 @@ Apprenticed craft involves learning from failure, recognising patterns, and buil
 The second bug I ran into was even stranger. I couldn't annotate any other other parts of the text block except for the first word. So once again, I asked bolt for help. But the AI, like before, only made the code more convoluted. I finally decided to add some debug logs for myself and find out.
 And surprisingly, the issue wasn't in the annotation logic at all. It was a mismatch between how the code was trying to save data and what the database would accept. The first word had a special position that the database rejected, but everything else was fine.
 
-This kind of systematic problem-solving can't be commoditised into a prompt. It emerges from years of wrestling with broken code, building pattern recognition through failure, and developing the intuition to know when to step back and reframe. We're encouraging people to skip this apprenticeship entirely - but the skills it develops become essential the moment things go wrong
+This kind of systematic problem-solving can't be commoditised into a prompt. It emerges from years of wrestling with broken code, building pattern recognition through failure, and developing the intuition to know when to step back and reframe. We're encouraging people to skip this apprenticeship entirely - but the skills it develops become essential the moment things go wrong.
 
 # Cascading Complexity and Technical Debt as Spiritual Debt 
 Another thing that was subtly brought to my attention as I've started to integrate vibe coding into my workflow, is that I'm starting to lose connection with my work. Knowing a system well allows you to keep efficiency and building principles in mind, all of which help complexity.
