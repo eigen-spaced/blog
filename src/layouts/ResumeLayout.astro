@@ -32,25 +32,10 @@ const { frontmatter } = Astro.props;
   .pastel-holographic {
     font-size: 1.2rem;
     font-weight: bold;
-    background: linear-gradient(
-      90deg,
-      #ff4081,
-      #ff6b35,
-      #ffa726,
-      #66bb6a,
-      #42a5f5,
-      #ab47bc,
-      #7e57c2,
-      #ff4081,
-      #ff6b35,
-      #ffa726,
-      #66bb6a
-    );
-    background-size: 300% 100%;
+    background: linear-gradient(90deg, #e8d9c9, #d8a7b1, #a8b8d8);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
-    animation: pastel-flow 9s linear infinite;
   }
 
   @keyframes pastel-flow {
@@ -62,27 +47,27 @@ const { frontmatter } = Astro.props;
     }
   }
 
-  .dancing-spirit {
+  .dancing-sprite {
     animation: dance 1s ease-in-out infinite;
   }
 
-  .dancing-spirit:nth-child(1) {
+  .dancing-sprite:nth-child(1) {
     animation-delay: 1.1s;
     animation-duration: 1.9s;
   }
-  .dancing-spirit:nth-child(2) {
+  .dancing-sprite:nth-child(2) {
     animation-delay: 0s;
     animation-duration: 2.1s;
   }
-  .dancing-spirit:nth-child(3) {
+  .dancing-sprite:nth-child(3) {
     animation-delay: 0.7s;
     animation-duration: 2.3s;
   }
-  .dancing-spirit:nth-child(4) {
+  .dancing-sprite:nth-child(4) {
     animation-delay: 0.3s;
     animation-duration: 1.8s;
   }
-  .dancing-spirit:nth-child(5) {
+  .dancing-sprite:nth-child(5) {
     animation-delay: 0.5s;
     animation-duration: 2.2s;
   }
