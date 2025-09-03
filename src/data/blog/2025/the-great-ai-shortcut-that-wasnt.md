@@ -12,7 +12,7 @@ tags:
 # The promise and the reality
 SpacetimeSorcerer spent 3 months building their SaaS project with AI. Then they gave up. Not because they lacked motivation, but because AI promised them something it couldn't deliver: the ability to build software without understanding software.
 
-I had recently decided to use `bolt.new` to build a simple custom text annotation application for an ML project I was working on but also just to see how much I could push the limits with AI. The result was impressive, particularly given that a few months ago, I had attempted to build the same thing using just ChatGPT (no agentic AI). The approach was frustrating. I'd ask for for code, ChatGPT would deliver, but as the application grew more complex, integrating my code with AI-generated code became a mess. I eventually gave up.
+I had recently decided to use `bolt.new` to build a simple custom text annotation application for an ML project I was working on but also just to see how much I could push the limits with AI. The result was impressive, particularly given that a few months ago, I had attempted to build the same thing using just ChatGPT (no agentic AI). The approach was frustrating. I'd ask for code, ChatGPT would deliver, but as the application grew more complex, integrating my code with AI-generated code became a mess. I eventually gave up.
 
 So I decided to give it another go and offloaded the entire thing to bolt. To my amazement (and disbelief), it delivered in 15 min what had taken me weeks. At the time, the only thing that crossed my mind was that we are so unbelievably cooked.
 
