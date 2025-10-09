@@ -1,0 +1,297 @@
+---
+import ResumeLayout from "@/layouts/ResumeLayout.astro";
+import { Image } from "astro:assets";
+
+import ts from "@/assets/icons/Typescript.svg";
+import js from "@/assets/icons/Javascript.svg";
+import python from "@/assets/icons/Python.svg";
+import go from "@/assets/icons/Go.svg";
+import postgres from "@/assets/icons/Postgres.svg";
+import react from "@/assets/icons/React.svg";
+import nextjs from "@/assets/icons/NextJS.svg";
+import vue from "@/assets/icons/Vue.svg";
+import nuxtjs from "@/assets/icons/nuxtjs.svg";
+import azure from "@/assets/icons/Azure.svg";
+import aws from "@/assets/icons/AWS.svg";
+import colab from "@/assets/icons/Colab.svg";
+import claude from "@/assets/icons/Claude.svg";
+import openai from "@/assets/icons/OpenAI.svg";
+
+import secplus from "@/assets/resume/secplus.png";
+import aiess from "@/assets/resume/aiess.png";
+import az900 from "@/assets/resume/az900.png";
+---
+
+<ResumeLayout pageTitle="More about me">
+  <section>
+    <h2>My tech stack</h2>
+
+    <article class="not-prose flex flex-wrap gap-1.5">
+      <div class="tech-stack-item">
+        <Image src={js} alt="js-icon" class="m-0 w-8" />
+        <p class="leading-[2]">Javascript</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={ts} alt="ts-icon" class="m-0 w-8" />
+        <p class="leading-[2]">Typescript</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={python} alt="python-icon" class="m-0 w-8" />
+        <p class="leading-[2]">Python</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={go} alt="go-icon" class="m-0 w-8" />
+        <p class="leading-[2]">Go</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={react} alt="react-icon" class="m-0 w-8" />
+        <p class="leading-[2]">React</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={nextjs} alt="nextjs-icon" class="m-0 w-8" />
+        <p class="leading-[2]">NextJS</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={postgres} alt="javascript" class="m-0 w-8" />
+        <p class="leading-[2]">PostgreSQL</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={vue} alt="vue" class="m-0 w-8" />
+        <p class="leading-[2]">Vue</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={nuxtjs} alt="nuxtjs" class="m-0 w-8" />
+        <p class="leading-[2]">NuxtJS</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={azure} alt="azure-icon" class="m-0 w-8" />
+        <p class="leading-[2]">Azure Cloud</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={aws} alt="aws-icon" class="m-0 w-8" />
+        <p class="leading-[2]">AWS</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={claude} alt="nuxtjs" class="m-0 w-8" />
+        <p class="leading-[2]">Claude Code</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={colab} alt="colab-icon" class="m-0 w-8" />
+        <p class="leading-[2]">Google Colab</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <Image src={openai} alt="nuxtjs" class="m-0 w-8" />
+        <p class="leading-[2]">OpenAI Codex</p>
+      </div>
+
+      <div class="tech-stack-item">
+        <p class="leading-[2]">Warp.dev</p>
+      </div>
+    </article>
+  </section>
+
+  <br />
+  <section>
+    <h1>Experience</h1>
+    <article>
+      <div class="not-prose two-col-stack pastel-holographic">
+        <div class="primary-content">
+          <p>Technical Assistance Officer</p>
+          <p>TasCollege</p>
+        </div>
+        <div class="secondary-content">
+          <p>Sep. 2024 – Jun. 2025</p>
+          <p>Melbourne, VIC</p>
+        </div>
+      </div>
+
+      <ul>
+        <li>
+          Established secure protocols for handling sensitive student documents,
+          ensuring compliance with institutional data protection policies and
+          document retention requirements.
+        </li>
+
+        <li>
+          Developed comprehensive operational documentation for student
+          management systems after identifying critical knowledge transfer gaps
+          and reduce onboarding complexity.
+        </li>
+
+        <li>
+          Led digitisation initiatives that streamlined data collection
+          workflows and strengthened compliance controls. Redesigned asset
+          tracking systems using automated spreadsheet formulas, eliminating
+          manual double-entry errors and improving data integrity across
+          multiple departments.
+        </li>
+
+        <li>
+          Advocated for and contributed to ticketing system implementation,
+          creating accountability measures and audit trails for technical
+          support activities.
+        </li>
+      </ul>
+    </article>
+    <div class="not-prose two-col-stack pastel-holographic">
+      <div class="primary-content">
+        <p>Associate Software Developer</p>
+        <p>Publicis Sapient</p>
+      </div>
+      <div class="secondary-content">
+        <p>Mar. 2022 – Jul. 2025</p>
+        <p>Melbourne, VIC</p>
+      </div>
+    </div>
+
+    <article>
+      <ul>
+        <li>
+          Designed and implemented secure data workflow pipeline for migrating
+          on-premises data to Azure Cloud for public sector client. Ensured data
+          integrity and compliance with cloud security best practices whilst
+          enabling seamless reporting capabilities.
+        </li>
+
+        <li>
+          Developed secure customer-facing interface integrating with Adobe
+          Campaign Classic backend for major financial institution. Collaborated
+          with cross-functional teams to balance user experience requirements
+          with compliance obligations in regulated environment.
+        </li>
+
+        <li>
+          Achieved 60-75% test coverage for a client’s web application,
+          identifying key operational risks. This work contributed in parallel
+          to the team being awarded ”Best Performing Team” based on client
+          feedback for Q2 2023.
+        </li>
+
+        <li>
+          Designed and proposed a cost-effective system architecture for a
+          university client by leveraging and modifying open-source (OSS)
+          solutions, reducing the estimated project delivery time by 3 months.
+        </li>
+
+        <li>
+          Facilitated monthly training sessions on software development best
+          practices, promoting a collaborative learning environment.
+        </li>
+      </ul>
+    </article>
+  </section>
+
+  <section>
+    <h1>Education</h1>
+
+    <div class="not-prose two-col-stack">
+      <div class="primary-content">
+        <p>Masters of Information Technology</p>
+        <p>Royal Melbourne Institute of Technology</p>
+      </div>
+      <div class="secondary-content">
+        <p>Jul. 2019 – Dec. 2021</p>
+        <p>Melbourne, VIC</p>
+      </div>
+    </div>
+
+    <div class="not-prose two-col-stack">
+      <div class="primary-content">
+        <p>
+          Bachelors of Computer Application (Cloud Technology + Cybersecurity
+          specialisation)
+        </p>
+        <p>Jain University</p>
+      </div>
+      <div class="secondary-content">
+        <p>Jun. 2015 – May. 2018</p>
+        <p>Benguluru, India</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h1>Projects</h1>
+    <a href="/resume/projects">[You can check out my projects here →]</a>
+  </section>
+
+  <br />
+
+  <section>
+    <h1>Certifications</h1>
+
+    <div class="mb-12 flex flex-col justify-around sm:flex-row">
+      <div class="flex flex-col">
+        <Image
+          src={secplus}
+          alt="Security+ badge"
+          class="h-36 w-36 object-cover"
+        />
+        <a
+          class="text-center underline decoration-dotted"
+          href="https://www.credly.com/badges/38ee5501-0a9f-46b9-8af0-180fb9e16288/linked_in_profile"
+          >View Certificate</a
+        >
+      </div>
+
+      <div class="flex flex-col">
+        <Image
+          src={aiess}
+          alt="Google AI Essentials badge"
+          class="h-36 w-36 object-cover"
+        />
+        <a
+          class="text-center underline decoration-dotted"
+          href="https://www.coursera.org/account/accomplishments/specialization/A67B4YS915W5"
+        >
+          View Certificate
+        </a>
+      </div>
+
+      <div class="flex flex-col">
+        <Image src={az900} alt="AZ-900 badge" class="h-36 w-36 object-cover" />
+        <a
+          class="text-center underline decoration-dotted"
+          href="https://learn.microsoft.com/api/credentials/share/en-us/SaneyarKhazin-9111/B4B23538D3E5F262?sharingId=78EB419E979A66CF"
+        >
+          View Certificate
+        </a>
+      </div>
+    </div>
+  </section>
+</ResumeLayout>
+
+<style is:global>
+  @reference '../../styles/global.css';
+
+  .pastel-holographic {
+    font-size: 1.2rem;
+    font-weight: bold;
+    background: linear-gradient(90deg, #e8d9c9, #d8a7b1, #a8b8d8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  @keyframes pastel-flow {
+    0% {
+      background-position: 0% 0%;
+    }
+    100% {
+      background-position: 300% 0%;
+    }
+  }
+</style>

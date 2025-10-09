@@ -1,0 +1,105 @@
+---
+import ResumeLayout from "@/layouts/ResumeLayout.astro";
+import { Image } from "astro:assets";
+
+import croc from "@/assets/resume/Croc.svg";
+import koala from "@/assets/resume/Koala.svg";
+import kangaroo from "@/assets/resume/Kangaroo.svg";
+import quokka from "@/assets/resume/Quokka.svg";
+import spider from "@/assets/resume/Spider.svg";
+
+import race from "@/assets/resume/great sushi race.gif";
+import seeminglyRandom1 from "@/assets/resume/screenshots/seemingly-random-screen-1.png";
+import seeminglyRandom2 from "@/assets/resume/screenshots/seemingly-random-screen-2.png";
+---
+
+<ResumeLayout pageTitle="My projects">
+  <article>
+    <h1>The Great Sushi Race</h1>
+
+    <div class="inline-flex w-full justify-between">
+      <Image src={croc} alt="croc" />
+      <Image src={koala} alt="koala" />
+      <Image src={kangaroo} alt="kangaroo" />
+      <Image src={spider} alt="spider" />
+      <Image src={quokka} alt="quokka" />
+    </div>
+
+    <p>Tech stack: <b>Nextjs, MongoDB, Zustand, Pixi.js</b></p>
+
+    <Image src={race} alt="The Great Sushi Race" height="300" />
+    <a href="https://github.com/eigen-spaced/team-board-update">Source</a>
+
+    <ul>
+      <li>
+        The weekly meetings at one of my previous companies relied on
+        traditional charts and spreadsheets to communicate quarterly revenue
+        performance across sectors, making it difficult for teams to quickly
+        grasp their progress relative to goals.
+      </li>
+      <li>
+        I designed an interactive dashboard that visualized sector performance
+        as a race between Australian animals, where each animal's position
+        represented how close that sector was to hitting quarterly targets. This
+        transformed dry financial reporting into an engaging visual that made
+        performance gaps immediately apparent to leadership and motivated teams
+        through friendly competition.
+      </li>
+    </ul>
+
+    <blockquote>
+      <p>
+        Technical highlights: Large-scale React architecture, real-time data
+        visualization with Pixi.js, optimized state management for smooth
+        animations.
+      </p>
+    </blockquote>
+  </article>
+
+  <article>
+    <h1>Statistical Pairwise Comparison Ranker</h1>
+
+    <p>Tech stack: <b>Built using: Vue, Nuxt, PostgresSQL, Vercel,</b></p>
+
+    <a href="https://seemingly-random.vercel.app/">Live Deployment</a>
+    <a href="https://github.com/eigen-spaced/seemingly-random">Source</a>
+
+    <div class="flex gap-1.5">
+      <Image
+        src={seeminglyRandom1}
+        alt="Seemingly random screen 1"
+        height="230"
+      />
+      <Image
+        src={seeminglyRandom2}
+        alt="Seemingly random screen 2"
+        height="230"
+      />
+    </div>
+
+    <ul>
+      <li>
+        Most ranking systems break down when comparing fundamentally different
+        categories—how do you fairly rank Batman against a Toyota Corolla? I
+        built an application that uses ELO rating algorithms to handle these
+        "apples to oranges" comparisons, revealing unexpected patterns in human
+        preference hierarchies.
+      </li>
+      <li>
+        The system generates a dynamic network graph showing relationship
+        clusters between unlikely items (Nicolas Cage cardboard cutouts vs. wet
+        socks vs. the Ghostbusters film), creating a visual map of how people
+        actually make irrational comparison decisions. This exploration into
+        comparative psychology demonstrates how statistical models can extract
+        meaningful insights from seemingly nonsensical data.
+      </li>
+    </ul>
+
+    <blockquote>
+      <p>
+        Technical highlights: ELO rating implementation, dynamic graph
+        visualization, statistical analysis of irrational decision patterns.
+      </p>
+    </blockquote>
+  </article>
+</ResumeLayout>
