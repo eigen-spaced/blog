@@ -28,7 +28,7 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
         id="greeting"
         class="my-4 inline-block text-4xl font-bold sm:my-8 sm:text-5xl"
       >
-        Namaste
+        Halo
       </h1>
 
       <p>I'm Sunny. I think across domains</p>
@@ -84,48 +84,3 @@ const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
   </main>
   <Footer />
 </Layout>
-
-<script>
-  document.addEventListener("astro:page-load", () => {
-    const indexLayout = (document.querySelector("#main-content") as HTMLElement)
-      ?.dataset?.layout;
-    if (indexLayout) {
-      sessionStorage.setItem("backUrl", "/");
-    }
-
-    const greetings = [
-      "Hello",
-      "Namaste",
-      "Wominjeka",
-      "Hola",
-      "Bonjour",
-      "Ciao",
-      "Guten Tag",
-    ]; // Add more greetings as you like
-    let currentGreetingIndex = 0;
-    const greetingElement = document.getElementById("greeting");
-
-    if (greetingElement) {
-      greetingElement.textContent = greetings[currentGreetingIndex];
-      setInterval(() => {
-        // 1. Fade out the current greeting
-        greetingElement.style.opacity = "0";
-
-        // Wait for the fade-out to complete before changing text and fading in
-        setTimeout(() => {
-          currentGreetingIndex = (currentGreetingIndex + 1) % greetings.length;
-          greetingElement.textContent = greetings[currentGreetingIndex];
-
-          // 2. Fade in the new greeting
-          greetingElement.style.opacity = "1";
-        }, 500); // Match this duration to the CSS transition duration
-      }, 2000);
-    }
-  });
-</script>
-
-<style>
-  #greeting {
-    transition: opacity 0.5s ease-in-out; /* Smooth transition for opacity */
-  }
-</style>
