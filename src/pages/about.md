@@ -3,12 +3,12 @@ layout: ../layouts/AboutLayout.astro
 title: "About"
 ---
 
-My work sits at the intersection of technology and trust. Coming from a development background, I am now learning to the AI space, specifically Reinforcement Learning.
+Hi, I'm Sunny! I've been trying to blog and write more, and this is where I plan to share the things I've learned and experienced.
 
-Outside of work, my interests spread wide: high-intensity training, books that span every genre, meditative yoga flows, and deep dives into spirituality and cultural shifts. I'm someone who gets genuinely excited by learning, whether it's understanding a new security concept, exploring a philosophical idea, or figuring out how to optimize recovery between training sessions.
+Outside of work, my interests spread wide: high-intensity training, books that span most genres, meditative yoga flows, programming languages and cultural shifts. I'm someone who gets genuinely excited by learning, whether it's trying to decipher a research paper, exploring a philosophical idea, or figuring out how to optimize recovery between training sessions.
 
-This is where I think through it all. You'll find technical insights, cultural observations, thoughts on movement and mindfulness, and whatever else has captured my attention recently. Sometimes these threads weave together in surprising ways, sometimes they don't—but they're all part of how I make sense of the world.
+This is where I think through it all. Technical insights, cultural observations, thoughts on movement and mindfulness, and whatever else has captured my attention recently. Sometimes these threads weave together in surprising ways, sometimes they don't—but they're all part of how I make sense of the world.
 
-If you're someone who's also curious about multiple domains and enjoys perspectives that don't stay neatly categorized, you might find something worthwhile here.
+If you're someone who's also curious about multiple domains and enjoys perspectives that don't stay neatly categorised, you might find something worthwhile here.
 
 <a href="/resume">[View my resume →]</a>
