@@ -1,9 +1,9 @@
 export const SITE = {
-  website: "https://stillandbecoming.xyz/", // replace this with your deployed domain
+  website: "https://pointinspace.xyz/", // replace this with your deployed domain
   author: "Sunny Khazin",
   profile: "",
   desc: "I can't make up my mind on what I want to write about, so I write about everything ",
-  title: "Still and Becoming",
+  title: "Point In Space",
   ogImage: "astropaper-og.jpg",
   lightAndDarkMode: false,
   postPerIndex: 4,
@@ -14,7 +14,7 @@ export const SITE = {
   editPost: {
     enabled: false,
     text: "Suggest Changes",
-    url: "https://github.com/satnaing/astro-paper/edit/main/",
+    url: "",
   },
   dynamicOgImage: true,
   lang: "en", // html lang code. Set this empty and default will be "en"
