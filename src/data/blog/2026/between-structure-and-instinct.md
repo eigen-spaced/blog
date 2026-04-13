@@ -2,6 +2,7 @@
 pubDatetime: 2026-04-13T19:02:18.593Z
 title: Between Structure and Instinct
 slug: between-structure-and-instinct
+description: Personal reflections on learning styles
 tags:
   - reflections
 ---
