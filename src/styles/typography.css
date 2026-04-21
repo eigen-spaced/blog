@@ -116,4 +116,21 @@
       @apply rounded-sm border border-border px-0.5 py-px;
     }
   }
+  .app-prose .katex {
+    color: wheat;
+  }
+
+  .app-prose .katex-display {
+    overflow-x: auto;
+    font-size: 1.5em; /* set it here, not on .katex */
+  }
+
+  .app-prose code:has(.katex-display) {
+    font-size: 1.5em;
+  }
+
+  /* Inline latex */
+  .app-prose :not(code) > .katex {
+    font-size: 1.2em;
+  }
 }
