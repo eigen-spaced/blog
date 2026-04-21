@@ -1,7 +1,7 @@
 ---
 pubDatetime: 2025-06-14T12:21:22.584Z
 title: To Be Grateful Without Lying to Yourself
-description: How we can reframe gratitude - by shifting from performance to presence
+description: On reframing gratitude
 slug: to-be-grateful-without-lying
 tags:
   - spirituality
