@@ -1,3 +1,5 @@
+@import 'katex/dist/katex.min.css';
+
 @import "tailwindcss";
 @import "./typography.css";
 
@@ -21,6 +23,7 @@ html[data-theme="dark"] {
 }
 
 @theme inline {
+  --font-serif: var(--font-custom);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
@@ -73,11 +76,11 @@ html[data-theme="dark"] {
 @apply inline-flex content-center justify-between gap-2 border-2 p-2 text-center;
 }
 .two-col-stack {
-  @apply block sm:flex sm:justify-between sm:gap-4 mb-[1.25rem];
+  @apply block sm:flex sm:justify-between sm:gap-4 mb-5;
 }
 .primary-content {
   @apply flex-1 min-w-0;
 }
 .secondary-content {
-  @apply flex-shrink-0 mt-1 sm:mt-0 sm:text-right;
+  @apply shrink-0 mt-1 sm:mt-0 sm:text-right;
 }
