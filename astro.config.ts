@@ -1,4 +1,4 @@
-import { defineConfig, envField } from "astro/config";
+import { defineConfig, fontProviders, envField } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
 import remarkToc from "remark-toc";
@@ -8,6 +8,8 @@ import {
   transformerNotationHighlight,
   transformerNotationWordHighlight,
 } from "@shikijs/transformers";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 
 import { transformerFileName } from "./src/utils/transformers/fileName";
 import { SITE } from "./src/config";
@@ -24,7 +26,12 @@ export default defineConfig({
     mdx(),
   ],
   markdown: {
-    remarkPlugins: [remarkToc, [remarkCollapse, { test: "Table of contents" }]],
+    remarkPlugins: [
+      remarkMath,
+      remarkToc,
+      [remarkCollapse, { test: "Table of contents" }],
+    ],
+    rehypePlugins: [rehypeKatex],
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes
       themes: { light: "min-light", dark: "night-owl" },
@@ -61,4 +68,35 @@ export default defineConfig({
       }),
     },
   },
+  fonts: [
+    {
+      name: "Abtera",
+      cssVariable: "--font-custom",
+      provider: fontProviders.local(),
+      options: {
+        variants: [
+          {
+            weight: 300,
+            style: "normal",
+            src: ["./src/assets/fonts/Abtera-Light.ttf"],
+          },
+          {
+            weight: 400,
+            style: "normal",
+            src: ["./src/assets/fonts/Abtera-Regular.ttf"],
+          },
+          {
+            weight: 600,
+            style: "normal",
+            src: ["./src/assets/fonts/Abtera-SemiBold.ttf"],
+          },
+          {
+            weight: 700,
+            style: "normal",
+            src: ["./src/assets/fonts/Abtera-Bold.ttf"],
+          },
+        ],
+      },
+    },
+  ],
 });

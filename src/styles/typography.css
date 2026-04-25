@@ -13,9 +13,9 @@
       @apply mb-3 text-foreground;
     }
 
-    h3 {
-      @apply italic;
-    }
+    /* h3 { */
+    /*   @apply italic; */
+    /* } */
 
     p,
     strong,
@@ -122,12 +122,10 @@
 
   .app-prose .katex-display {
     overflow-x: auto;
-    font-size: 1.5em; /* set it here, not on .katex */
+    height: 4em;
+    font-size: 1.3em; /* set it here, not on .katex */
   }
 
-  .app-prose code:has(.katex-display) {
-    font-size: 1.5em;
-  }
 
   /* Inline latex */
   .app-prose :not(code) > .katex {
