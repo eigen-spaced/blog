@@ -121,14 +121,6 @@
   }
 
   .app-prose .katex-display {
-    overflow-x: auto;
-    height: 4em;
-    font-size: 1.3em; /* set it here, not on .katex */
-  }
-
-
-  /* Inline latex */
-  .app-prose :not(code) > .katex {
-    font-size: 1.2em;
+    font-size: 1.3em;
   }
 }

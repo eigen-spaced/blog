@@ -1,0 +1,196 @@
+---
+/** RoPE Paired Rotation — one 64-dim embedding rotated to two positions. Q is that embedding rotated to m_A=2 (outline bars, frozen); K is the same embedding rotated to m_B (filled bars, slider-driven). At m_B = m_A the two coincide; slide K away to watch fast pairs swing out of their Q outlines while slow pairs barely move. */
+---
+
+<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
+  <p class="mb-4 text-base leading-relaxed text-gray-400">
+    One 64-dim embedding, two views of it. <strong class="text-sky-400"
+      >Q</strong
+    > is the embedding rotated to position <em>m<sub>A</sub> = 2</em> — drawn as outlined
+    bars, frozen.
+    <strong class="text-amber-400">K</strong> is the same embedding rotated to wherever
+    the slider sits — drawn as filled bars on top. At <em>m<sub>B</sub> = 2</em> the
+    two are identical, so every K bar fills its own Q outline exactly. Slide K away
+    and watch:
+    <strong style="color:#fb923c">fast pairs (left, orange)</strong> swing wildly
+    out of their outlines; <strong style="color:#34d399"
+      >slow pairs (right, emerald)</strong
+    > barely peek past theirs.
+  </p>
+
+  <div class="mb-3">
+    <label
+      class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+      for="pr-mb-slider"
+    >
+      Token B position (m<sub>B</sub>) = <span
+        class="text-gray-200"
+        id="pr-mb-val">2</span
+      >
+      <span class="mx-2 text-gray-500">·</span>
+      relative distance = <span
+        class="font-semibold text-emerald-400"
+        id="pr-d-val">0</span
+      >
+    </label>
+    <input
+      type="range"
+      id="pr-mb-slider"
+      min="2"
+      max="130"
+      value="2"
+      class="w-full accent-indigo-400"
+    />
+  </div>
+
+  <div
+    class="mt-2 mb-1 flex flex-wrap gap-4 text-[0.78rem] font-semibold tracking-wider uppercase"
+  >
+    <span class="text-sky-300/80">outlined: Q (m<sub>A</sub> = 2, frozen)</span>
+    <span class="text-amber-300/80">filled: K (m<sub>B</sub> = slider)</span>
+  </div>
+  <div class="overflow-x-auto">
+    <svg id="pr-chart"></svg>
+  </div>
+</div>
+
+<script>
+  import * as d3 from "d3";
+  import { VEC_64, thetaSmol, rotate2d } from "./rope-shared";
+
+  const M_A = 2;
+  const HEAD_DIM = 64;
+  const NUM_PAIRS = HEAD_DIM / 2;
+
+  // Color spectrum: orange (fast pairs) → emerald (slow pairs)
+  const colorOf = d3.interpolateRgbBasis([
+    "#fb923c",
+    "#facc15",
+    "#a3e635",
+    "#34d399",
+  ]);
+  const pairColor = (k: number) => colorOf(k / (NUM_PAIRS - 1));
+
+  function rotatedDims(m: number): number[] {
+    const out = new Array(HEAD_DIM);
+    for (let k = 0; k < NUM_PAIRS; k++) {
+      const ia = 2 * k,
+        ib = 2 * k + 1;
+      const [ra, rb] = rotate2d(VEC_64[ia], VEC_64[ib], m * thetaSmol(k));
+      out[ia] = ra;
+      out[ib] = rb;
+    }
+    return out;
+  }
+
+  // Y axis: max pair magnitude (rotation preserves magnitude, so this bounds Q and K alike)
+  let yAbs = 0;
+  for (let k = 0; k < NUM_PAIRS; k++) {
+    const ia = 2 * k,
+      ib = 2 * k + 1;
+    const mag = Math.sqrt(VEC_64[ia] * VEC_64[ia] + VEC_64[ib] * VEC_64[ib]);
+    yAbs = Math.max(yAbs, mag);
+  }
+  yAbs *= 1.05;
+
+  const margin = { top: 6, right: 16, bottom: 22, left: 36 };
+  const width = 700,
+    height = 220;
+  const innerW = width - margin.left - margin.right;
+  const innerH = height - margin.top - margin.bottom;
+
+  const x = d3
+    .scaleBand()
+    .domain(d3.range(HEAD_DIM).map(String))
+    .range([0, innerW])
+    .padding(0.08);
+  const y = d3.scaleLinear().domain([-yAbs, yAbs]).range([innerH, 0]);
+
+  const svg = d3
+    .select("#pr-chart")
+    .attr("viewBox", `0 0 ${width} ${height}`)
+    .attr("width", "100%")
+    .style("max-width", `${width}px`);
+
+  const g = svg
+    .append("g")
+    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+  g.append("line")
+    .attr("x1", 0)
+    .attr("x2", innerW)
+    .attr("y1", y(0))
+    .attr("y2", y(0))
+    .attr("stroke", "rgba(255,255,255,0.18)")
+    .attr("stroke-width", 1);
+
+  g.append("g")
+    .call(d3.axisLeft(y).ticks(3).tickSize(0).tickPadding(4))
+    .call(g => g.select(".domain").remove())
+    .call(g =>
+      g.selectAll("text").attr("fill", "#9ca3af").style("font-size", "0.75rem")
+    );
+
+  // K filled bars first (so they sit behind Q's outline)
+  const kBars = g
+    .selectAll<SVGRectElement, number>("rect.k-bar")
+    .data(d3.range(HEAD_DIM))
+    .enter()
+    .append("rect")
+    .attr("class", "k-bar")
+    .attr("x", i => x(String(i))!)
+    .attr("width", x.bandwidth())
+    .attr("fill", i => pairColor(Math.floor(i / 2)))
+    .attr("opacity", 0.85)
+    .attr("rx", 1);
+
+  // Q outline bars on top — frame stays visible regardless of K's height
+  const qBars = g
+    .selectAll<SVGRectElement, number>("rect.q-bar")
+    .data(d3.range(HEAD_DIM))
+    .enter()
+    .append("rect")
+    .attr("class", "q-bar")
+    .attr("x", i => x(String(i))!)
+    .attr("width", x.bandwidth())
+    .attr("fill", "none")
+    .attr("stroke", i => pairColor(Math.floor(i / 2)))
+    .attr("stroke-width", 1.5)
+    .attr("rx", 1);
+
+  [0, 4, 8, 12, 16, 20, 24, 28, 31].forEach(k => {
+    const i = 2 * k;
+    g.append("text")
+      .attr("x", x(String(i))! + x.bandwidth())
+      .attr("y", innerH + 14)
+      .attr("text-anchor", "middle")
+      .attr("fill", "#9ca3af")
+      .attr("font-size", "0.7rem")
+      .text(`k=${k}`);
+  });
+
+  function applyDims(
+    bars: d3.Selection<SVGRectElement, number, SVGGElement, unknown>,
+    dims: number[]
+  ) {
+    bars
+      .attr("y", i => (dims[i] >= 0 ? y(dims[i]) : y(0)))
+      .attr("height", i => Math.abs(y(dims[i]) - y(0)));
+  }
+
+  applyDims(qBars, rotatedDims(M_A));
+  applyDims(kBars, rotatedDims(M_A));
+
+  const slider = document.getElementById("pr-mb-slider") as HTMLInputElement;
+  const mbValEl = document.getElementById("pr-mb-val")!;
+  const dValEl = document.getElementById("pr-d-val")!;
+
+  function update() {
+    const mB = parseInt(slider.value);
+    mbValEl.textContent = String(mB);
+    dValEl.textContent = String(mB - M_A);
+    applyDims(kBars, rotatedDims(mB));
+  }
+
+  slider.addEventListener("input", update);
+</script>
