@@ -6,9 +6,6 @@
   <p class="mb-4 text-base leading-relaxed text-gray-400">
     Drag the slider to change the token position m. Watch how each pair rotates.
   </p>
-  <p class="mb-4 text-base leading-relaxed text-gray-400">
-    Early pairs rotate quickly; later pairs rotate slowly.
-  </p>
 
   <div class="overflow-x-auto px-1.5 pt-1 pb-2">
     <div class="mb-0.5 flex" id="dim-strip-labels"></div>
@@ -35,7 +32,7 @@
   <p
     class="mb-2 text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
   >
-    2D rotation per pair
+    2D rotation per pair (Scroll me &rarr;)
   </p>
   <div class="flex gap-3 overflow-x-auto pb-2" id="dim-rotation-plots"></div>
 
@@ -306,8 +303,8 @@
       const vals = document.createElement("div");
       vals.className = "vals";
       vals.innerHTML = `
-        <div class="text-[0.95rem] text-gray-400">(${a.toFixed(2)}, ${b.toFixed(2)})</div>
-        <div class="text-[0.95rem] font-semibold" style="color:${color}">(${ra.toFixed(2)}, ${rb.toFixed(2)})</div>
+        <div class="text-[0.95rem] text-gray-400">Before: &nbsp; (${a.toFixed(2)}, ${b.toFixed(2)})</div>
+        <div class="text-[0.95rem] font-semibold" style="color:${color}">After: &nbsp; (${ra.toFixed(2)}, ${rb.toFixed(2)})</div>
       `;
       card.appendChild(vals);
       container.appendChild(card);

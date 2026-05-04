@@ -1,0 +1,227 @@
+---
+pubDatetime: 2026-05-04
+title: Exploring RoPE (A visual guide)
+slug: exploring-rope
+description: I talk about the lesser talked about aspects of RoPE
+tags:
+  - breakdows
+---
+
+import RoPEDimensionPairing from "@/components/blog/RoPE/RoPEDimensionPairing.astro";
+import RoPERelativeDistance from "@/components/blog/RoPE/RoPERelativeDistance.astro";
+import RoPEAbsolutePosition from "@/components/blog/RoPE/RoPEAbsolutePosition.astro";
+import RoPEPairedRotation from "@/components/blog/RoPE/RoPEPairedRotation.astro";
+import RoPEDotProduct from "@/components/blog/RoPE/RoPEDotProduct.astro";
+
+### Table of contents
+
+# Opening Moves
+
+Attention has become the backbone of modern AI. But here's something that surprised me when I first learned it: on its own, attention has no idea what order words appear in. It treats a sentence like a *bag of words*, comparing every token to every other token, like measuring the angle between vectors.
+
+My first instinct was this coudln't be right. Large Language Models (LLMs) are training to predcit the next token. So surely the architecture must understand the sequence? But that intuition was confalting the training objective with teh mechansim. Attention is just a **similarty engine**. A similarity engine, by itself, has no sense of order.
+
+That is where positional encoding comes in. It injects information directly into the attention mechanism, giving models the ability to reason about *where* a token sits, not just *what* it is. Of all the approaches developed, one has emerged as the industry standard across almost every major model built today: Rotary Position Embedding, or RoPE.
+
+Over the past couple of weeks, I’ve been diving deep into the mechanics of RoPE, trying to understand not just why it works so well by why it works so well. I won’t be cover the math here; but if that's what you're after, I would highly recommend the papers and blogs that have been attached at the end under the references section of this blog.
+
+For the more visual learner, I enjoyed this video from Zachery Huang, which did indeed help RoPE click.[Give me 30 min, I will make RoPE click forever](https://www.youtube.com/watch?v=hCzJo4ui1P8)
+
+What I've focused on instead is building intuition. I cover the mechanism a bit, but I focus mostly on the behaviour it produces — and why that behaviour makes RoPE such an elegant solution to a genuinely tricky problem. My goal is that by the end, you'll have a clear sense of what RoPE is doing and *why* it gives attention a natural sense of order.
+
+# The Blind Spot
+
+I highlighted that attention is blind to order. To illustrate this, consider the two sentences:
+
+1. "Artemis II flew around the moon"
+2. "moon II flew Artemis around the"
+
+From the perspective of self-attention, these sequences are the same. Same tokens, same vectors, same scores. Attention's role is simply to weigh how much one token influencess another. It has no concept of *where* a token sit in sequence. Shuffle the words into nonsensical sequence like (2) and the mechanism doesn't flinch.
+
+This is exactly why positional encoding is needed. By giving each token a sense of where it sits in the sequence, we give attention a sense of order. When two tokens “look” at each other, they can now tell whether they are neighbors or far apart, whether they’re in the expected order or shuffled. Positional encodings transform attention from a bag-of-words observer into a model that understands the structure of the sequence it’s reading.
+
+Classic Transformers, introduced in Vaswani et al.'s landmark 2017 paper, approached this by adding sinusodial positional encoding directly to the token embeddings. Each position received a fixed signature built from sine and cosine waves. This was a clean solution but also a rigid one. Because the encodings were absolute and fixed at training time, the model learned a static coordinate for each position rather than anything about the relationship between positions.
+
+This imposed a serious limitation because language is relational, and absolute encodings struggle to generalise beyond sequence lengths seen during training. A follow-up paper by Shaw et al. in 2018 recognised this, proposing that attention should instead consider the relative distances between tokens directly. RoPE takes that idea to its logical conclusion.
+
+Rather than adding positions to the embeddings, RoPE rotates the vectors themselves. Conceptually, it’s a subtle shift, but it’s elegant. Each token’s representation carries its positional information geometrically, allowing attention to compare tokens while respecting sequence order.
+
+# Dimensions of a Feather
+
+The core mechanism behind RoPE is **dimension pairing**. For an embedding vector with dimensions $d_0, d_1,...d_n$, adjacent dimensions of the vector are grouped into pairs such as $(d_0, d_1)$ or $(d_62, d_63)$ - and treated as coordinates on a 2D plane. Each pair behaves like a tiny vector that rotates by an angle determined by the token’s position in a sequence. This rotation, as we'll see later, encodes relative and absolute positions in a way that integrates seamlessly with the attention mechanism.
+
+The visual below shows a single token's query vector with 8 dimensions $(d = 8)$. Adjacent dimensions form pairs, for example, $(d_0, d_1)$ is $P_1$, $(d_2, d_3$) is $P_1$ and so on. As the token position changes, each pair rotates in its 2D plane.
+
+<div class="not-prose">
+  <RoPEDimensionPairing />
+</div>
+
+Notice the pattern: $P 0$ rotates quickly, while $P_3$ barely moves. You can think of each pair as a tiny clock hand spinning at its own speed. The bar chart shows the same effect numerically: lower-index pairs change more, higher-index pairs change less. By rotating each pair at a different speed, RoPE encodes the token’s position in a rich, geometric way.
+
+So why do the pairs rotate so differently? Why do the earlier pairs rotate faster, while the later pairs barely move?
+
+The answer lies in a simple sinusoidal rule. Each dimension pair rotates at a frequency determined by its position in the vector:
+
+$$
+\theta_k = \frac{1}{10000^{2k/d}}
+$$
+
+Where:
+
+- **k** is the pair index (P₀, P₁, P₂, …)
+- **d** is the total embedding size
+- **10000** is a fixed scaling constant
+
+Here, $\theta$ is the rotation rate for each dimension pair, i.e how many radians a pair rotates per unit of position. A large $\theta$ means the pair rotates quickly as we move along the sequence; a small $\theta$ means it barely moves. As k increases, $\theta$ shrinks dramatically, which is exactly the pattern we saw in the visualisation.
+
+In our example, the embedding size is **d = 8**, so we can compute the rotation rate for each pair directly.
+
+**Pair $P_0$ — First Dimension Pair (k = 0)**
+
+Substitute into the formula:
+
+$$
+\theta_0 = \frac{1}{10000^{2(0)/8}} = \frac{1}{10000^0} = 1
+$$
+
+With a rotation magnitude of 1, this pair rotates the fastest. Even small position changes produce noticeable movement.
+
+
+**Pair $P_1$ — Second Dimension Pair (k = 1)**
+
+$$
+\theta_1 = \frac{1}{10000^{2(1)/8}} = \frac{1}{10000^{0.25}} = 0.1
+$$
+
+This pair rotates more slowly than P₀, but the motion is still clearly visible.
+
+
+**Pair $P_2$ — Third Dimension Pair (k = 2)**
+
+$$
+\theta_2 = \frac{1}{10000^{2(2)/8}} = \frac{1}{10000^{0.5}} = 0.01
+$$
+
+This pair rotates much more slowly. Changes accumulate gradually as position increases.
+
+After the first few pairs, the pattern should become more obvious:
+
+$$
+P_0 \Rightarrow 1 \\
+P_1 \Rightarrow 0.1 \\
+P_2 \Rightarrow 0.01 \\
+P_3 \Rightarrow 0.001 \\
+$$
+
+Each successive pair rotates an order of magnitude more slowly than the one before it. Early (high frequency) pairs rotate quickly; later (low frequency) pairs rotate slowly. But every pair follows the same underlying rule. Position isn’t injected randomly. There is a method to the madness. Each pair responds to position at a different rate, creating a layered way of encoding where a token appears - a detail that becomes important when we start looking at how tokens relate across longer contexts.
+
+# Angles and Distances
+
+We’ve seen how individual vectors rotate with position. But the real power emerges when attention compares tokens. When two tokens interact through a dot product, what matters isn't their individual rotations - its the *angle between them*. Because RoPE ties that angle directly to how far apart two tokens sit in the sequence, the similarity score becomes naturally sensitive to relative position.
+
+Consider the sentence
+>"The astronaut explores the moon."
+
+Before RoPE, "astronaut" and "moon" carry rich semantic meaning in the embedding space. Attention sees similarity, but has no reliable sense of how far apart they are or what sits between the them. Swap the words, and the attention score don't flinch. The positions are invisible.
+
+With RoPE, the angle between two vectors now depends on their relative distance in the sequence. Attention is still a dot product, but that dot product now reflects not only the content of each token, but also how far apart they are.
+
+The visual below illustrates how relative distance works in practice. "astronaut" stays at position 1 in both sentences, but "moon" sits at position 4 in the first and position 7 in the second, pushed further along the sequence as more words are added between them. The growing distance changes the angle between their rotated vectors, which in turn changes how attention scores across their relationship.
+
+<div class="not-prose">
+  <RoPERelativeDistance />
+</div>
+
+Now for the opposite case. Both sentences keep *astronaut* and *moon* the same distance apart (3 tokens), but the second sentence adds extra context in front. Even though the absolute positions change, their relative distance remains the same, and therefore so does the angle between them.
+
+<div class="not-prose">
+  <RoPEAbsolutePosition />
+</div>
+
+>Note: A token's embedding does not change with position. RoPE rotates it, but the same word always starts from the same point in the embedding space. What changes is the relative angle between two tokens when their embeddings are dotted together — and it is that angle which carries the positional information.
+
+# How far can attention hear
+
+An interesting property emerges when you consider how fast and slow pairs behave as tokens move apart. Up close, every pair has something to say. Further apart, only some of them do.
+
+The visual below uses the same base embedding for both Q and K tokens. Q is frozen at position 2, shown as outlined bars. K starts at the same position, its filled bars sitting perfectly inside Q's outlines. Slide K further along the sequence and watch what happens.
+
+<div class="not-prose">
+  <RoPEPairedRotation />
+</div>
+
+The fast pairs on the left swing immediately out of their outlines, K's filled bars pulling away from Q's outlines with every step. The slow pairs on the right barely shift, their filled bars staying close to where Q left them even as the distance grows large.
+
+There is an element of token influence in all this. Fast pairs are highly sensitive to nearby tokens but quickly become unreliable at distance. Slow pairs are nearly indifferent to close neighbours but carry a stable signal over long range. Together they give attention a kind of depth, a way of weighing relationships differently depending on how far apart two tokens are.
+
+The heatmap below shows the same behaviour but across all distances at once. Each row is a dimension pair - fast at the top, slow at the bottom.
+
+<div class="not-prose">
+  <RoPEDotProduct />
+</div>
+
+[[Ropes decay]]
+
+Read it top to bottom at any distance: the fast pairs are already oscillating, flickering between agreement and opposition within just a handful of positions. The slow pairs hold steady, barely changing colour even hundreds of positions apart.
+
+Read it left to right: up close, nearly everything is orange — Q and K agree broadly across all pairs. As the distance grows, the fast pairs fracture into alternating bands of orange and blue, their signal dissolving into noise. The slow pairs fade more gracefully, holding their warmth far longer before they too begin to drift.
+
+Notice the slow pairs at the bottom. They hold their orange signal for a long time — but eventually, even they start cooling toward blue, then warming back toward orange again. This is the rotation completing a full cycle — the geometry folding back on itself. It's a glimpse of a real constraint: push a model beyond the sequence lengths it was trained on, and the positional language it learned starts to lose its meaning. But that's a thread worth pulling on separately.
+
+---
+
+Imagine two people explaining a topic to you. They are talking about the same thing not contributing in different ways. One is sitting next to you and the other one across a noisy room. The person beside you conveys everything: tone, emphasis, exact words, the fine detail of every sentence. The person across the room has to shout. You catch fragments, the loudest words, the broad strokes. But the nuance doesn't travel. Yet those shouted fragments still matter. They add to what the nearby person is saying, filling in context you wouldn't have otherwise.
+
+This is roughly what happens when attention compares tokens at different distances. When two tokens are close, fast and slow pairs alike contribute to the dot product, where every dimension still relatively aligned, the score strong and rich. As tokens move apart, the fast pairs rotate so many times they become noise. What remains is the quiet, steady signal of the slow pairs, which complete their rotation cycle over thousands of positions and have barely moved even across large distances.
+
+This matters more than it might seem. Consider "it" appearing at position 120, referring back to "dog" at position 3. The fast pairs between these two tokens have long since dissolved into noise due to too many rotations, too much cancellation. But the slow pairs of "dog" have barely rotated at all. Their vectors are still close enough in angle that they contribute a faint but real signal to the dot product.
+
+Attention doesn't know any of this explicitly. But during training, it learns to read it. That faint, low-frequency signal becomes a cue, informing it that something relevant is back there. The model learns that a score carried almost entirely by slow pairs means distance, and that distance doesn't necessarily mean irrelevance.
+
+This is the deeper elegance of RoPE. Paired with attention, it doesn't just encode where tokens are, also encodes how confidently two tokens can hear each other and lets the model learn what to do with that confidence.
+
+# No extra weights
+
+RoPE is parameter-free because there's no lookup table of learned positions the model has to store. No $P_0, P_1, P_2...$ sitting in memory. It's a fixed geometric rule applied directly to the vectors at runtime, every time, from a deterministic formula.
+
+That said, RoPE does shape what the weights learn. The model trains on vectors that have already been rotated, so the weights adapt to interpret that rotated geometry. But they don't store the rotations themselves. Rather, the rotation is always computed fresh from the formula.
+
+This is a practical benefit as much as an elegant one. Learned positional embeddings add to the model's parameter count. A lookup table that has to be initialised, trained, and stored. RoPE adds none of that. Every model using RoPE gets positional encoding without paying for it in parameters, and without a table that grows with sequence length.
+
+But because the weights were trained assuming those rotations are always present, RoPE can't simply be removed at inference. Think of it like glasses. The lenses do the correction, and your brain adapts to see clearly through them. RoPE is the glasses. The weights are the brain. Take the glasses away and the brain hasn't changed — it just receives input it no longer knows how to process.
+
+# Closing
+
+I hope I was able to convey the simplicity and elegance of RoPE. But as alluded to in a previous section, that simplicity comes with trade-offs.
+
+These rotations don’t grow indefinitely, and due to the mathemtical nature of the sinusoidal function, they eventually wrap around and repeat. And as sequences get longer, those repeating patterns can start to overlap, making distant positions harder to distinguish.
+
+That’s where RoPE shifts from elegant to subtle.
+
+What happens when those positional signals begin to blur? How does attention behave when distance becomes ambiguous? And what does that mean for models operating over very long contexts?
+
+That will be the next piece I explore in another writeup.
+
+Thank you for reading :)
+
+# References
+
+- Su, Jianlin *et al*. "RoFormer: Enhanced Transformer with Rotary Position Embedding", 2021. https://arxiv.org/abs/2104.09864
+
+- Vaswani, Ashish *et al.* "Attention Is All you Need", 2017. https://arxiv.org/abs/1706.03762
+
+- Wang, Benyou *et al*. "Encoding word order in complex embeddings", 2019. https://arxiv.org/abs/1912.12333
+
+- Press, Ofir et al. "Train Short, Test Long: Attention with Linear Biases Enables Input Length Extrapolation" (ALiBi), 2021. https://arxiv.org/abs/2108.12409
+
+- Peng, Bowen et al. "YaRN: Efficient Context Window Extension of Large Language Models", 2023. https://arxiv.org/abs/2309.00071
+
+- Shaw, Peter et al. "Self-Attention with Relative Position Representations," 2018. https://arxiv.org/abs/1803.02155
+
+- Wang, Benyou et al. "Encoding Word Order in Complex Embeddings." 2020. https://arxiv.org/abs/1912.12333
+
+- Wang, Yu-An and Yun-Nung Chen. "What Do Position Embeddings Learn? An Empirical Study of Pre-Trained Language Model Positional Encoding." 2020. https://arxiv.org/abs/2010.04903
+
+- Stella, Biderman et al. "Rotary Embeddings: A Relative Revolution" *EleutherAI*, 2021. https://blog.eleuther.ai/rotary-embeddings/
+
+- Sahu, Shreyashkar. "A deep-dive into RoPE, and why it matters?" *Shreyashkar Lal Sahu*, 2025. https://shreyashkar-ml.github.io/posts/rope/
