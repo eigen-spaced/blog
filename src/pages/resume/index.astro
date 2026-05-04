@@ -2,111 +2,12 @@
 import ResumeLayout from "@/layouts/ResumeLayout.astro";
 import { Image } from "astro:assets";
 
-import ts from "@/assets/icons/Typescript.svg";
-import js from "@/assets/icons/Javascript.svg";
-import python from "@/assets/icons/Python.svg";
-import go from "@/assets/icons/Go.svg";
-import postgres from "@/assets/icons/Postgres.svg";
-import mysql from "@/assets/icons/MySQL.svg";
-import react from "@/assets/icons/React.svg";
-import nextjs from "@/assets/icons/NextJS.svg";
-import vue from "@/assets/icons/Vue.svg";
-import nuxtjs from "@/assets/icons/NuxtJS.svg";
-import azure from "@/assets/icons/Azure.svg";
-import aws from "@/assets/icons/AWS.svg";
-import colab from "@/assets/icons/Colab.svg";
-import claude from "@/assets/icons/Claude.svg";
-import openai from "@/assets/icons/OpenAI.svg";
-
 import secplus from "@/assets/resume/secplus.png";
 import aiess from "@/assets/resume/aiess.png";
 import az900 from "@/assets/resume/az900.png";
 ---
 
 <ResumeLayout pageTitle="More about me">
-  <section>
-    <h2>My tech stack</h2>
-
-    <article class="not-prose flex flex-wrap gap-1.5 border-0">
-      <div class="tech-stack-item">
-        <Image src={js} alt="js-icon" class="m-0 w-8" />
-        <p class="leading-[2]">Javascript</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={ts} alt="ts-icon" class="m-0 w-8 border-0" />
-        <p class="leading-[2]">Typescript</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={python} alt="python-icon" class="m-0 w-8" />
-        <p class="leading-[2]">Python</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={go} alt="go-icon" class="m-0 w-8" />
-        <p class="leading-[2]">Go</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={react} alt="react-icon" class="m-0 w-8" />
-        <p class="leading-[2]">React</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={nextjs} alt="nextjs-icon" class="m-0 w-8" />
-        <p class="leading-[2]">NextJS</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={postgres} alt="javascript" class="m-0 w-8" />
-        <p class="leading-[2]">PostgreSQL</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={mysql} alt="javascript" class="m-0 w-8 border-0" />
-        <p class="leading-[2]">MySQL</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={vue} alt="vue" class="m-0 w-8" />
-        <p class="leading-[2]">Vue</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={nuxtjs} alt="nuxtjs" class="m-0 w-8" />
-        <p class="leading-[2]">NuxtJS</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={azure} alt="azure-icon" class="m-0 w-8" />
-        <p class="leading-[2]">Azure Cloud</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={aws} alt="aws-icon" class="m-0 w-8" />
-        <p class="leading-[2]">AWS</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={claude} alt="nuxtjs" class="m-0 w-8" />
-        <p class="leading-[2]">Claude Code</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={colab} alt="colab-icon" class="m-0 w-8" />
-        <p class="leading-[2]">Google Colab</p>
-      </div>
-
-      <div class="tech-stack-item">
-        <Image src={openai} alt="nuxtjs" class="m-0 w-8" />
-        <p class="leading-[2]">OpenAI Codex</p>
-      </div>
-    </article>
-  </section>
-
-  <br />
-
   <section>
     <h1>Projects</h1>
     <a href="/resume/projects">[You can check out my projects here →]</a>

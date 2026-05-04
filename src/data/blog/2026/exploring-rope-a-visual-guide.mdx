@@ -107,10 +107,12 @@ This pair rotates much more slowly. Changes accumulate gradually as position inc
 After the first few pairs, the pattern should become more obvious:
 
 $$
-P_0 \Rightarrow 1 \\
-P_1 \Rightarrow 0.1 \\
-P_2 \Rightarrow 0.01 \\
-P_3 \Rightarrow 0.001 \\
+\begin{aligned}
+P_0 &\Rightarrow 1 \\
+P_1 &\Rightarrow 0.1 \\
+P_2 &\Rightarrow 0.01 \\
+P_3 &\Rightarrow 0.001
+\end{aligned}
 $$
 
 Each successive pair rotates an order of magnitude more slowly than the one before it. Early (high frequency) pairs rotate quickly; later (low frequency) pairs rotate slowly. But every pair follows the same underlying rule. Position isn’t injected randomly. There is a method to the madness. Each pair responds to position at a different rate, creating a layered way of encoding where a token appears - a detail that becomes important when we start looking at how tokens relate across longer contexts.
