@@ -180,27 +180,27 @@ This matters more than you might think. Consider a token like "it" at position 1
 
 The elegance of RoPE comes from the way it pairs with attention. It encodes token positions while creating a natural decay that the model learns to navigate. By preserving these low-frequency signals over thousands of positions, RoPE allows the attention mechanism to gauge how loudly two tokens can hear each other. This lets the model develop its own sense of confidence, deciding exactly which distant whispers are worth its focus.
 
-# No extra weights
+# The Parameter-Free Advantage
 
-Another layer of elegance that RoPE brings is that it doesn't add any extra weights to the model. RoPE is parameter-free, and it is parameter-free because there's no lookup table of learned positions the model has to store. No $P_0, P_1, P_2...$ sitting in memory. It's a fixed geometric rule applied directly to the vectors at runtime, every time, from a deterministic formula.
+Another layer of elegance that RoPE brings is its zero-parameter footprint. Because there is no lookup table of learned positions to store. There is no $P_0, P_1, P_2...$ occupying memory. RoPE is entirely parameter-free. It is a fixed geometric rule applied directly to vectors at runtime, computed fresh from a deterministic formula every time.
 
-That said, RoPE does shape what the weights learn. The model trains on vectors that have already been rotated, so the weights adapt to interpret that rotated geometry. But they don't store the rotations themselves. Rather, the rotation is always computed fresh from the formula.
+This efficiency is where mathematical beauty meets hardware practicality. Unlike traditional learned embeddings, which require a dedicated parameter budget for a lookup table that must be initialized, trained, and stored, RoPE sidesteps this overhead entirely. You get sophisticated positional context "for free," without a table that grows in size alongside your sequence length.
 
-This is a practical benefit as much as an elegant one. Learned positional embeddings add to the model's parameter count. A lookup table that has to be initialised, trained, and stored. RoPE adds none of that. Every model using RoPE gets positional encoding without paying for it in parameters, and without a table that grows with sequence length.
+However, while the formula is fixed, its influence is structural. The model trains on vectors that have already been rotated, meaning the weights learn to interpret that specific geometry. They don’t store the rotations themselves, but they are tuned to perceive them.
 
-But because the weights were trained assuming those rotations are always present, RoPE can't simply be removed at inference. Think of it like glasses. The lenses do the correction, and your brain adapts to see clearly through them. RoPE is the glasses. The weights are the brain. Take the glasses away and the brain hasn't changed — it just receives input it no longer knows how to process.
+You can think of it like glasses: the lenses provide the correction, and your brain adapts to see clearly through them. RoPE is the glasses; the weights are the brain. If you remove the glasses at inference, the brain hasn't "broken," but it is suddenly receiving input it no longer knows how to process.
 
 # Closing
 
 I hope I was able to convey the simplicity and elegance of RoPE. But as alluded to in a previous section, that simplicity comes with trade-offs.
 
-These rotations don’t grow indefinitely, and due to the mathemtical nature of the sinusoidal function, they eventually wrap around and repeat. And as sequences get longer, those repeating patterns can start to overlap, making distant positions harder to distinguish.
+These rotations don’t grow indefinitely, and due to the mathematical nature of the sinusoidal function, they eventually wrap around and repeat. And as sequences get longer, those repeating patterns can start to overlap, making distant positions harder to distinguish.
 
 That’s where RoPE shifts from elegant to subtle.
 
 What happens when those positional signals begin to blur? How does attention behave when distance becomes ambiguous? And what does that mean for models operating over very long contexts?
 
-That will be the next piece I explore in another writeup.
+That will be the next piece I explore in another write-up.
 
 Thank you for reading :)
 
