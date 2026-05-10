@@ -1,0 +1,377 @@
+---
+/** RoPE Absolute Position — same relative distance, different absolute positions → same angle (angle is invariant to absolute position) */
+---
+
+<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
+  <p class="mb-4 text-base leading-relaxed text-gray-400">
+    Now the opposite: both sentences have <strong class="text-sky-400"
+      >"astronaut"</strong
+    > and
+    <strong class="text-amber-400">"moon"</strong> 3 tokens apart, but sentence B
+    prepends extra context. The absolute positions change, yet the <strong
+      class="text-emerald-400">angle between them</strong
+    > stays identical.
+  </p>
+
+  <div class="mb-3 flex items-center gap-2">
+    <span
+      class="mr-1 text-[0.95rem] font-semibold tracking-wider text-gray-400 uppercase"
+      >Sentence:</span
+    >
+    <button
+      id="abs-btn-a"
+      class="cursor-pointer rounded-lg border border-indigo-500/40 bg-indigo-500/20 px-4 py-1.5 text-[0.95rem] font-semibold text-indigo-200 transition-all duration-200"
+    >
+      A: Short
+    </button>
+    <button
+      id="abs-btn-b"
+      class="cursor-pointer rounded-lg border border-[#2e3347] bg-[#2a3040] px-4 py-1.5 text-[0.95rem] font-semibold text-gray-400 transition-all duration-200 hover:text-gray-300"
+    >
+      B: Longer context
+    </button>
+  </div>
+
+  <div class="mb-1 flex flex-wrap gap-1" id="abs-tokens"></div>
+  <div class="mb-3 flex flex-wrap gap-1" id="abs-indices"></div>
+
+  <div class="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-[0.95rem] text-gray-400">
+    <span
+      ><span
+        class="mr-1 inline-block h-2 w-2 rounded-full bg-sky-400 align-middle"
+      ></span> astronaut pos <span
+        id="abs-pos-a"
+        class="font-mono text-gray-200">1</span
+      ></span
+    >
+    <span
+      ><span
+        class="mr-1 inline-block h-2 w-2 rounded-full bg-amber-400 align-middle"
+      ></span> moon pos <span id="abs-pos-m" class="font-mono text-gray-200"
+        >4</span
+      ></span
+    >
+    <span
+      >Relative: <span
+        id="abs-delta"
+        class="font-mono font-semibold text-emerald-400">3</span
+      ></span
+    >
+    <span
+      ><span class="font-mono font-semibold text-emerald-400" id="abs-angle-val"
+      ></span>
+      <span class="text-gray-400">(constant)</span></span
+    >
+  </div>
+
+  <div class="flex justify-center">
+    <svg id="abs-plot" class="block"></svg>
+  </div>
+</div>
+
+<style is:global>
+  .stok {
+    padding: 0.25rem 0.6rem;
+    border-radius: 5px;
+    font-size: 1rem;
+    font-weight: 500;
+    background: rgba(255, 255, 255, 0.04);
+    color: #d1d5db;
+    border: 1px solid transparent;
+    transition: all 0.3s;
+  }
+  .stok.hl-a {
+    background: rgba(56, 189, 248, 0.12);
+    color: #60a5fa;
+    font-weight: 700;
+    border-color: rgba(56, 189, 248, 0.25);
+  }
+  .stok.hl-m {
+    background: rgba(251, 191, 36, 0.12);
+    color: #fbbf24;
+    font-weight: 700;
+    border-color: rgba(251, 191, 36, 0.25);
+  }
+  .sidx {
+    display: inline-block;
+    padding: 0 0.6rem;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #6b7280;
+    font-variant-numeric: tabular-nums;
+  }
+  .sidx.hl-a {
+    color: #60a5fa;
+    font-weight: 600;
+  }
+  .sidx.hl-m {
+    color: #fbbf24;
+    font-weight: 600;
+  }
+</style>
+
+<script>
+  import * as d3 from "d3";
+  import {
+    thetaSmol,
+    renderTokens,
+    ACTIVE_BTN,
+    INACTIVE_BTN,
+  } from "./rope-shared";
+
+  const SENTS = {
+    A: {
+      tokens: ["The", "astronaut", "explores", "the", "moon."],
+      aPos: 1,
+      mPos: 4,
+    },
+    B: {
+      tokens: [
+        "Deep",
+        "in",
+        "the",
+        "silent",
+        "galaxy,",
+        "the",
+        "astronaut",
+        "explores",
+        "the",
+        "moon.",
+      ],
+      aPos: 6,
+      mPos: 9,
+    },
+  };
+  let cur = "A" as "A" | "B";
+  const K = 3;
+
+  const btnA = document.getElementById("abs-btn-a")!;
+  const btnB = document.getElementById("abs-btn-b")!;
+
+  function renderSentence() {
+    const s = SENTS[cur];
+    renderTokens(
+      document.getElementById("abs-tokens")!,
+      document.getElementById("abs-indices")!,
+      s.tokens,
+      s.aPos,
+      s.mPos
+    );
+    document.getElementById("abs-pos-a")!.textContent = String(s.aPos);
+    document.getElementById("abs-pos-m")!.textContent = String(s.mPos);
+    document.getElementById("abs-delta")!.textContent = String(s.mPos - s.aPos);
+  }
+
+  function buildPlot(animate: boolean) {
+    const svg = d3.select("#abs-plot");
+    const W = 480,
+      H = 360,
+      CX = W / 2,
+      CY = H / 2,
+      R = 135;
+    const theta = thetaSmol(K);
+    const s = SENTS[cur];
+    const angA = s.aPos * theta,
+      angM = s.mPos * theta,
+      delta = (s.mPos - s.aPos) * theta;
+    const laR = R + 20;
+    const anchor = (c: number) =>
+      c > 0.3 ? "start" : c < -0.3 ? "end" : "middle";
+    const anchorA = anchor(Math.cos(angA));
+    const anchorM = anchor(Math.cos(angM));
+    const pA = [CX + R * Math.cos(angA), CY - R * Math.sin(angA)];
+    const pM = [CX + R * Math.cos(angM), CY - R * Math.sin(angM)];
+    const lA = [CX + laR * Math.cos(angA), CY - laR * Math.sin(angA)];
+    const lM = [CX + laR * Math.cos(angM), CY - laR * Math.sin(angM)];
+    const mid = angA + delta / 2;
+    const lD = [CX + R * 0.6 * Math.cos(mid), CY - R * 0.6 * Math.sin(mid)];
+    const dur = animate ? 600 : 0,
+      ease = d3.easeCubicInOut;
+
+    if (svg.select(".abs-orbit").empty()) {
+      svg
+        .attr("viewBox", `0 0 ${W} ${H}`)
+        .attr("width", "100%")
+        .style("max-width", `${W}px`);
+      svg
+        .append("circle")
+        .attr("class", "abs-orbit")
+        .attr("cx", CX)
+        .attr("cy", CY)
+        .attr("r", R)
+        .attr("fill", "none")
+        .attr("stroke", "rgba(255,255,255,0.06)")
+        .attr("stroke-width", 1);
+      svg
+        .append("line")
+        .attr("x1", CX - R - 10)
+        .attr("x2", CX + R + 10)
+        .attr("y1", CY)
+        .attr("y2", CY)
+        .attr("stroke", "rgba(255,255,255,0.04)");
+      svg
+        .append("line")
+        .attr("x1", CX)
+        .attr("x2", CX)
+        .attr("y1", CY - R - 10)
+        .attr("y2", CY + R + 10)
+        .attr("stroke", "rgba(255,255,255,0.04)");
+      svg
+        .append("path")
+        .attr("class", "abs-arc")
+        .attr("fill", "rgba(52,211,153,0.10)")
+        .attr("stroke", "#34d399")
+        .attr("stroke-width", 1.5)
+        .attr("stroke-opacity", 0.5);
+      svg
+        .append("line")
+        .attr("class", "abs-line-a")
+        .attr("x1", CX)
+        .attr("y1", CY)
+        .attr("stroke", "#60a5fa")
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 0.5);
+      svg
+        .append("line")
+        .attr("class", "abs-line-m")
+        .attr("x1", CX)
+        .attr("y1", CY)
+        .attr("stroke", "#fbbf24")
+        .attr("stroke-width", 2)
+        .attr("stroke-opacity", 0.5);
+      svg
+        .append("circle")
+        .attr("class", "abs-dot-a")
+        .attr("r", 7)
+        .attr("fill", "#60a5fa")
+        .attr("stroke", "#1b1f29")
+        .attr("stroke-width", 2);
+      svg
+        .append("circle")
+        .attr("class", "abs-dot-m")
+        .attr("r", 7)
+        .attr("fill", "#fbbf24")
+        .attr("stroke", "#1b1f29")
+        .attr("stroke-width", 2);
+      svg
+        .append("text")
+        .attr("class", "abs-lbl-a")
+        .attr("fill", "#60a5fa")
+        .attr("font-size", "0.95rem")
+        .attr("font-weight", "600");
+      svg
+        .append("text")
+        .attr("class", "abs-lbl-m")
+        .attr("fill", "#fbbf24")
+        .attr("font-size", "0.95rem")
+        .attr("font-weight", "600");
+      svg
+        .append("text")
+        .attr("class", "abs-lbl-d")
+        .attr("fill", "#34d399")
+        .attr("font-size", "1rem")
+        .attr("font-weight", "700")
+        .attr("text-anchor", "middle");
+    }
+
+    svg
+      .select(".abs-line-a")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("x2", pA[0])
+      .attr("y2", pA[1]);
+    svg
+      .select(".abs-line-m")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("x2", pM[0])
+      .attr("y2", pM[1]);
+    svg
+      .select(".abs-dot-a")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("cx", pA[0])
+      .attr("cy", pA[1]);
+    svg
+      .select(".abs-dot-m")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("cx", pM[0])
+      .attr("cy", pM[1]);
+    svg
+      .select(".abs-lbl-a")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("x", lA[0])
+      .attr("y", lA[1])
+      .attr("text-anchor", anchorA)
+      .text("astronaut");
+    svg
+      .select(".abs-lbl-m")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("x", lM[0])
+      .attr("y", lM[1])
+      .attr("text-anchor", anchorM)
+      .text("moon");
+
+    const arcGen = d3
+      .arc<any, any>()
+      .innerRadius(R * 0.25)
+      .outerRadius(R * 0.42)
+      .startAngle(0)
+      .endAngle(-delta);
+    svg
+      .select(".abs-arc")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("d", arcGen({} as any))
+      .attr(
+        "transform",
+        `translate(${CX},${CY}) rotate(${-(90 - (angA * 180) / Math.PI)})`
+      );
+
+    const deg = ((delta * 180) / Math.PI).toFixed(1);
+    svg
+      .select(".abs-lbl-d")
+      .transition()
+      .duration(dur)
+      .ease(ease)
+      .attr("x", lD[0])
+      .attr("y", lD[1])
+      .text(`α = ${deg}°`);
+    document.getElementById("abs-angle-val")!.textContent = `α = ${deg}°`;
+  }
+
+  function updateBtns() {
+    btnA.className = cur === "A" ? ACTIVE_BTN : INACTIVE_BTN;
+    btnB.className = cur === "B" ? ACTIVE_BTN : INACTIVE_BTN;
+  }
+
+  btnA.addEventListener("click", () => {
+    if (cur !== "A") {
+      cur = "A";
+      updateBtns();
+      renderSentence();
+      buildPlot(true);
+    }
+  });
+  btnB.addEventListener("click", () => {
+    if (cur !== "B") {
+      cur = "B";
+      updateBtns();
+      renderSentence();
+      buildPlot(true);
+    }
+  });
+
+  renderSentence();
+  buildPlot(false);
+</script>

@@ -1,0 +1,459 @@
+---
+/** RoPE Dimension Pairing — query vector strip (colored by pair), slider, rotation circles, before/after bar chart */
+---
+
+<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
+  <p class="mb-4 text-base leading-relaxed text-gray-400">
+    Drag the slider to change the token position m. Watch how each pair rotates.
+  </p>
+
+  <div class="overflow-x-auto px-1.5 pt-1 pb-2">
+    <div class="mb-0.5 flex" id="dim-strip-labels"></div>
+    <div class="flex" id="dim-strip-cells"></div>
+  </div>
+
+  <div class="mt-4 mb-3">
+    <label
+      class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+      for="dim-pos-slider"
+    >
+      Token position (m) = <span class="text-gray-200" id="dim-pos-val">5</span>
+    </label>
+    <input
+      type="range"
+      id="dim-pos-slider"
+      min="0"
+      max="20"
+      value="5"
+      class="w-full accent-indigo-400"
+    />
+  </div>
+
+  <p
+    class="mb-2 text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+  >
+    2D rotation per pair (Scroll me &rarr;)
+  </p>
+  <div class="flex gap-3 overflow-x-auto pb-2" id="dim-rotation-plots"></div>
+
+  <p
+    class="mt-4 mb-2 text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+  >
+    Embedding values: before & after RoPE
+  </p>
+
+  <div class="overflow-x-auto">
+    <svg id="dim-bar-chart"></svg>
+  </div>
+</div>
+
+<style is:global>
+  [data-pair="0"] {
+    background: #1e3a5f;
+    color: #60a5fa;
+  }
+  [data-pair="1"] {
+    background: #4a1942;
+    color: #f472b6;
+  }
+  [data-pair="2"] {
+    background: #14432a;
+    color: #34d399;
+  }
+  [data-pair="3"] {
+    background: #452a08;
+    color: #fbbf24;
+  }
+  .strip-cell {
+    width: 64px;
+    height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    transition:
+      transform 0.15s,
+      box-shadow 0.15s;
+    cursor: default;
+  }
+  .strip-cell.highlighted {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 2px currentColor;
+    z-index: 2;
+  }
+  .strip-label {
+    width: 64px;
+    text-align: center;
+    font-size: 0.85rem;
+    color: #9ca3af;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  /* 4px within-pair gap; extra 10px between pairs */
+  #dim-strip-labels > * + *,
+  #dim-strip-cells > * + * {
+    margin-left: 4px;
+  }
+  #dim-strip-labels > :nth-child(odd):not(:first-child),
+  #dim-strip-cells > :nth-child(odd):not(:first-child) {
+    margin-left: 14px;
+  }
+  .rotation-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    padding: 0.5rem;
+    width: 190px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .rotation-card .pair-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    text-align: center;
+  }
+  .rotation-card .angle-text {
+    font-size: 0.95rem;
+    color: #9ca3af;
+    text-align: center;
+    margin-top: 0.15rem;
+  }
+  .rotation-card .vals {
+    text-align: center;
+    margin-top: 0.15rem;
+    line-height: 1.3;
+  }
+</style>
+
+<script>
+  import * as d3 from "d3";
+  import {
+    D,
+    EXAMPLE_VEC,
+    PAIRS,
+    PAIR_COLORS,
+    thetaK,
+    rotate2d,
+    dimToPair,
+  } from "./rope-shared";
+
+  // ── Dimension strip (built once): d-label on top row, embedding value (pair-colored) on bottom row ──
+  const labelEl = document.getElementById("dim-strip-labels")!;
+  const stripEl = document.getElementById("dim-strip-cells")!;
+  for (let i = 0; i < D; i++) {
+    const lbl = document.createElement("span");
+    lbl.className = "strip-label";
+    lbl.textContent = `d${i}`;
+    labelEl.appendChild(lbl);
+
+    const cell = document.createElement("span");
+    const p = dimToPair(i);
+    cell.className = "strip-cell";
+    cell.dataset.pair = String(p);
+    cell.textContent = EXAMPLE_VEC[i].toFixed(2);
+    cell.addEventListener("mouseenter", () => {
+      stripEl.querySelectorAll(".strip-cell").forEach(c => {
+        if ((c as HTMLElement).dataset.pair === String(p))
+          c.classList.add("highlighted");
+      });
+    });
+    cell.addEventListener("mouseleave", () => {
+      stripEl
+        .querySelectorAll(".strip-cell")
+        .forEach(c => c.classList.remove("highlighted"));
+    });
+    stripEl.appendChild(cell);
+  }
+
+  // ── Fixed y-scale for bar chart ──
+  const FIXED_Y_EXT = (() => {
+    let maxMag = 0;
+    PAIRS.forEach(([ai, bi]) => {
+      const mag = Math.sqrt(EXAMPLE_VEC[ai] ** 2 + EXAMPLE_VEC[bi] ** 2);
+      if (mag > maxMag) maxMag = mag;
+    });
+    return maxMag * 1.15;
+  })();
+
+  function buildRotationPlots(pos: number) {
+    const container = document.getElementById("dim-rotation-plots")!;
+    container.innerHTML = "";
+    const size = 140,
+      cx = size / 2,
+      cy = size / 2,
+      plotR = 52;
+
+    PAIRS.forEach(([ia, ib], k) => {
+      const a = EXAMPLE_VEC[ia],
+        b = EXAMPLE_VEC[ib];
+      const angle = pos * thetaK(k);
+      const [ra, rb] = rotate2d(a, b, angle);
+      const r = Math.sqrt(a * a + b * b);
+      const color = PAIR_COLORS[k];
+      const scale = plotR / Math.max(r * 1.3, 0.01);
+
+      const card = document.createElement("div");
+      card.className = "rotation-card";
+      const title = document.createElement("div");
+      title.className = "pair-title";
+      title.style.color = color;
+      title.innerHTML = `P${k}: (d<sub>${ia}</sub>, d<sub>${ib}</sub>)`;
+      card.appendChild(title);
+
+      const svg = d3
+        .create("svg")
+        .attr("width", size)
+        .attr("height", size)
+        .attr("viewBox", `0 0 ${size} ${size}`);
+      svg
+        .append("circle")
+        .attr("cx", cx)
+        .attr("cy", cy)
+        .attr("r", r * scale)
+        .attr("fill", "none")
+        .attr("stroke", "rgba(255,255,255,0.08)")
+        .attr("stroke-width", 1);
+      svg
+        .append("line")
+        .attr("x1", cx - plotR)
+        .attr("x2", cx + plotR)
+        .attr("y1", cy)
+        .attr("y2", cy)
+        .attr("stroke", "rgba(255,255,255,0.05)");
+      svg
+        .append("line")
+        .attr("x1", cx)
+        .attr("x2", cx)
+        .attr("y1", cy - plotR)
+        .attr("y2", cy + plotR)
+        .attr("stroke", "rgba(255,255,255,0.05)");
+
+      if (Math.abs(angle) > 0.01) {
+        const startAngle = Math.atan2(b, a);
+        const arcR = r * scale * 0.5;
+        const arc = d3
+          .arc<any, any>()
+          .innerRadius(arcR - 0.5)
+          .outerRadius(arcR + 0.5)
+          .startAngle(0)
+          .endAngle(angle);
+        svg
+          .append("path")
+          .attr("d", arc)
+          .attr(
+            "transform",
+            `translate(${cx},${cy}) rotate(${-90 + (startAngle * 180) / Math.PI})`
+          )
+          .attr("fill", color)
+          .attr("opacity", 0.3);
+      }
+
+      svg
+        .append("line")
+        .attr("x1", cx)
+        .attr("y1", cy)
+        .attr("x2", cx + a * scale)
+        .attr("y2", cy - b * scale)
+        .attr("stroke", "rgba(255,255,255,0.15)")
+        .attr("stroke-width", 1)
+        .attr("stroke-dasharray", "3,2");
+      svg
+        .append("line")
+        .attr("x1", cx)
+        .attr("y1", cy)
+        .attr("x2", cx + ra * scale)
+        .attr("y2", cy - rb * scale)
+        .attr("stroke", color)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-opacity", 0.6);
+      svg
+        .append("circle")
+        .attr("cx", cx + a * scale)
+        .attr("cy", cy - b * scale)
+        .attr("r", 5)
+        .attr("fill", "none")
+        .attr("stroke", "rgba(255,255,255,0.5)")
+        .attr("stroke-width", 1.5);
+      svg
+        .append("circle")
+        .attr("cx", cx + ra * scale)
+        .attr("cy", cy - rb * scale)
+        .attr("r", 5)
+        .attr("fill", color)
+        .attr("stroke", "#1b1f29")
+        .attr("stroke-width", 1.5);
+
+      const angleDeg = ((angle * 180) / Math.PI) % 360;
+
+      card.appendChild(svg.node()!);
+
+      const angleText = document.createElement("div");
+      angleText.className = "angle-text";
+      angleText.textContent = `${angleDeg.toFixed(1)}°`;
+      card.appendChild(angleText);
+
+      const vals = document.createElement("div");
+      vals.className = "vals";
+      vals.innerHTML = `
+        <div class="text-[0.95rem] text-gray-400">Before: &nbsp; (${a.toFixed(2)}, ${b.toFixed(2)})</div>
+        <div class="text-[0.95rem] font-semibold" style="color:${color}">After: &nbsp; (${ra.toFixed(2)}, ${rb.toFixed(2)})</div>
+      `;
+      card.appendChild(vals);
+      container.appendChild(card);
+    });
+  }
+
+  function buildBarChart(pos: number) {
+    const svg = d3.select("#dim-bar-chart");
+    svg.selectAll("*").remove();
+    const margin = { top: 20, right: 12, bottom: 28, left: 40 },
+      width = 700,
+      height = 190;
+    const innerW = width - margin.left - margin.right,
+      innerH = height - margin.top - margin.bottom;
+    svg
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .attr("width", "100%")
+      .style("max-width", `${width}px`);
+    const g = svg
+      .append("g")
+      .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const rotated = [...EXAMPLE_VEC];
+    PAIRS.forEach(([ia, ib], k) => {
+      const [ra, rb] = rotate2d(
+        EXAMPLE_VEC[ia],
+        EXAMPLE_VEC[ib],
+        pos * thetaK(k)
+      );
+      rotated[ia] = ra;
+      rotated[ib] = rb;
+    });
+
+    const dims = d3.range(D);
+    const x0 = d3
+      .scaleBand()
+      .domain(dims.map(String))
+      .range([0, innerW])
+      .padding(0.25);
+    const barW = x0.bandwidth() / 2;
+    const y = d3
+      .scaleLinear()
+      .domain([-FIXED_Y_EXT, FIXED_Y_EXT])
+      .range([innerH, 0]);
+
+    g.append("line")
+      .attr("x1", 0)
+      .attr("x2", innerW)
+      .attr("y1", y(0))
+      .attr("y2", y(0))
+      .attr("stroke", "rgba(255,255,255,0.1)");
+    g.selectAll(".grid")
+      .data(y.ticks(5).filter(t => t !== 0))
+      .enter()
+      .append("line")
+      .attr("x1", 0)
+      .attr("x2", innerW)
+      .attr("y1", d => y(d))
+      .attr("y2", d => y(d))
+      .attr("stroke", "rgba(255,255,255,0.04)");
+
+    dims.forEach(i => {
+      const p = dimToPair(i),
+        color = PAIR_COLORS[p],
+        xPos = x0(String(i))!;
+      const origV = EXAMPLE_VEC[i],
+        rotV = rotated[i];
+      g.append("rect")
+        .attr("x", xPos)
+        .attr("width", barW)
+        .attr("y", origV >= 0 ? y(origV) : y(0))
+        .attr("height", Math.abs(y(0) - y(origV)))
+        .attr("fill", color)
+        .attr("opacity", 0.2)
+        .attr("rx", 2);
+      g.append("rect")
+        .attr("x", xPos + barW)
+        .attr("width", barW)
+        .attr("y", rotV >= 0 ? y(rotV) : y(0))
+        .attr("height", Math.abs(y(0) - y(rotV)))
+        .attr("fill", color)
+        .attr("opacity", 0.85)
+        .attr("rx", 2);
+    });
+
+    dims.forEach(i => {
+      g.append("text")
+        .attr("x", x0(String(i))! + x0.bandwidth() / 2)
+        .attr("y", innerH + 18)
+        .attr("text-anchor", "middle")
+        .attr("fill", PAIR_COLORS[dimToPair(i)])
+        .attr("font-size", "0.9rem")
+        .attr("font-weight", "600")
+        .text(`d${i}`);
+    });
+
+    g.append("g")
+      .call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(6))
+      .call(g => g.select(".domain").remove())
+      .call(g =>
+        g.selectAll("text").attr("fill", "#9ca3af").style("font-size", "0.9rem")
+      );
+
+    const leg = g
+      .append("g")
+      .attr("transform", `translate(${innerW - 210}, ${-10})`);
+    leg
+      .append("rect")
+      .attr("width", 9)
+      .attr("height", 9)
+      .attr("rx", 1)
+      .attr("fill", "#fff")
+      .attr("opacity", 0.15);
+    leg
+      .append("text")
+      .attr("x", 14)
+      .attr("y", 8)
+      .attr("fill", "#9ca3af")
+      .attr("font-size", "0.95rem")
+      .text("Original");
+    leg
+      .append("rect")
+      .attr("x", 95)
+      .attr("width", 9)
+      .attr("height", 9)
+      .attr("rx", 1)
+      .attr("fill", "#fff")
+      .attr("opacity", 0.7);
+    leg
+      .append("text")
+      .attr("x", 109)
+      .attr("y", 8)
+      .attr("fill", "#9ca3af")
+      .attr("font-size", "0.95rem")
+      .text("After RoPE");
+  }
+
+  const posSlider = document.getElementById(
+    "dim-pos-slider"
+  ) as HTMLInputElement;
+  const posVal = document.getElementById("dim-pos-val")!;
+
+  function render() {
+    const pos = parseInt(posSlider.value);
+    posVal.textContent = String(pos);
+    buildRotationPlots(pos);
+    buildBarChart(pos);
+  }
+
+  render();
+  posSlider.addEventListener("input", render);
+</script>
