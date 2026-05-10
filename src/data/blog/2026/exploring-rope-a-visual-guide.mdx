@@ -1,5 +1,5 @@
 ---
-pubDatetime: 2026-05-04
+pubDatetime: 2026-10-04
 title: Exploring RoPE (A visual guide)
 slug: exploring-rope
 description: I talk about the lesser talked about aspects of RoPE
@@ -7,11 +7,11 @@ tags:
   - breakdows
 ---
 
-import RoPEDimensionPairing from "@/components/blog/RoPE/RoPEDimensionPairing.astro";
-import RoPERelativeDistance from "@/components/blog/RoPE/RoPERelativeDistance.astro";
-import RoPEAbsolutePosition from "@/components/blog/RoPE/RoPEAbsolutePosition.astro";
-import RoPEPairedRotation from "@/components/blog/RoPE/RoPEPairedRotation.astro";
-import RoPEDotProduct from "@/components/blog/RoPE/RoPEDotProduct.astro";
+import RoPEDimensionPairing from "@/components/posts/RoPE/RoPEDimensionPairing.astro";
+import RoPERelativeDistance from "@/components/posts/RoPE/RoPERelativeDistance.astro";
+import RoPEAbsolutePosition from "@/components/posts/RoPE/RoPEAbsolutePosition.astro";
+import RoPEPairedRotation from "@/components/posts/RoPE/RoPEPairedRotation.astro";
+import RoPEDotProduct from "@/components/posts/RoPE/RoPEDotProduct.astro";
 
 ### Table of contents
 
@@ -19,7 +19,7 @@ import RoPEDotProduct from "@/components/blog/RoPE/RoPEDotProduct.astro";
 
 Attention has become the backbone of modern AI. But here's something that surprised me when I first learned it: on its own, attention has no idea what order words appear in. It treats a sentence like a *bag of words*, comparing every token to every other token, like measuring the angle between vectors.
 
-My first instinct was this coudln't be right. Large Language Models (LLMs) are training to predcit the next token. So surely the architecture must understand the sequence? But that intuition was confalting the training objective with teh mechansim. Attention is just a **similarty engine**. A similarity engine, by itself, has no sense of order.
+My first instinct was this couldn't be right. Large Language Models (LLMs) are training to predict the next token. So surely the architecture must understand the sequence? But that intuition was conflating the training objective with the mechanism. Attention is just a **similarty engine**. A similarity engine, by itself, has no sense of order.
 
 That is where positional encoding comes in. It injects information directly into the attention mechanism, giving models the ability to reason about *where* a token sits, not just *what* it is. Of all the approaches developed, one has emerged as the industry standard across almost every major model built today: Rotary Position Embedding, or RoPE.
 
@@ -36,11 +36,11 @@ I highlighted that attention is blind to order. To illustrate this, consider the
 1. "Artemis II flew around the moon"
 2. "moon II flew Artemis around the"
 
-From the perspective of self-attention, these sequences are the same. Same tokens, same vectors, same scores. Attention's role is simply to weigh how much one token influencess another. It has no concept of *where* a token sit in sequence. Shuffle the words into nonsensical sequence like (2) and the mechanism doesn't flinch.
+From the perspective of self-attention, these sequences are the same. Same tokens, same vectors, same scores. Attention's role is simply to weigh how much one token influences another. It has no concept of *where* a token sit in sequence. Shuffle the words into nonsensical sequence like (2) and the mechanism doesn't flinch.
 
 This is exactly why positional encoding is needed. By giving each token a sense of where it sits in the sequence, we give attention a sense of order. When two tokens “look” at each other, they can now tell whether they are neighbors or far apart, whether they’re in the expected order or shuffled. Positional encodings transform attention from a bag-of-words observer into a model that understands the structure of the sequence it’s reading.
 
-Classic Transformers, introduced in Vaswani et al.'s landmark 2017 paper, approached this by adding sinusodial positional encoding directly to the token embeddings. Each position received a fixed signature built from sine and cosine waves. This was a clean solution but also a rigid one. Because the encodings were absolute and fixed at training time, the model learned a static coordinate for each position rather than anything about the relationship between positions.
+Classic Transformers, introduced in Vaswani et al.'s landmark 2017 paper, approached this by adding sinusoidal positional encoding directly to the token embeddings. Each position received a fixed signature built from sine and cosine waves. This was a clean solution but also a rigid one. Because the encodings were absolute and fixed at training time, the model learned a static coordinate for each position rather than anything about the relationship between positions.
 
 This imposed a serious limitation because language is relational, and absolute encodings struggle to generalise beyond sequence lengths seen during training. A follow-up paper by Shaw et al. in 2018 recognised this, proposing that attention should instead consider the relative distances between tokens directly. RoPE takes that idea to its logical conclusion.
 
@@ -170,15 +170,15 @@ Notice the slow pairs at the bottom. They hold their orange signal for a long ti
 
 ---
 
-Imagine two people explaining a topic to you. They are talking about the same thing not contributing in different ways. One is sitting next to you and the other one across a noisy room. The person beside you conveys everything: tone, emphasis, exact words, the fine detail of every sentence. The person across the room has to shout. You catch fragments, the loudest words, the broad strokes. But the nuance doesn't travel. Yet those shouted fragments still matter. They add to what the nearby person is saying, filling in context you wouldn't have otherwise.
+Imagine two people explaining a topic to you. They are talking about the same thing not contributing in different ways. One is sitting next to you and the other one across a noisy room. The person beside you conveys everything: subtle shifts in tone, emphasis, on specific words, the fine details of every sentence. Meanwhile the person across the room must shout. You only catch fragments - the loudest words, the broadest strokes as the finer nuance fail to travel the distance. Yet those shouted fragments still matter. They provide a baseline context to what the nearby might overlook.
 
-This is roughly what happens when attention compares tokens at different distances. When two tokens are close, fast and slow pairs alike contribute to the dot product, where every dimension still relatively aligned, the score strong and rich. As tokens move apart, the fast pairs rotate so many times they become noise. What remains is the quiet, steady signal of the slow pairs, which complete their rotation cycle over thousands of positions and have barely moved even across large distances.
+This is essentially what happens when an attention compares tokens across different distances. When two tokens are close, both fast- and slow-rotating pairs contribute to the dot product; because every dimension remains relatively aligned, the resulting score is high-resolution and rich in detail. 
 
-This matters more than it might seem. Consider "it" appearing at position 120, referring back to "dog" at position 3. The fast pairs between these two tokens have long since dissolved into noise due to too many rotations, too much cancellation. But the slow pairs of "dog" have barely rotated at all. Their vectors are still close enough in angle that they contribute a faint but real signal to the dot product.
+However, as tokens move apart, the high frequency fast pairs rotate so many times they eventually collapse to incoherent noise. What remains is the quiet, steady signal of the slow pairs. These dimensions complete their rotation cycles over thousands of positions, remaining remarkably stable and providing a consistent "shouted" context even across vast distances.
 
-Attention doesn't know any of this explicitly. But during training, it learns to read it. That faint, low-frequency signal becomes a cue, informing it that something relevant is back there. The model learns that a score carried almost entirely by slow pairs means distance, and that distance doesn't necessarily mean irrelevance.
+This matters more than you might think. Consider a token like "it" at position 120 referring back to "dog" at position 3. Across that distance, the fast rotating pairs have long since dissolved into noise, but the slow pairs have barely shifted. Their vectors are still close enough in angle that they contribute a faint but real signal to the dot product. During training, the model learns to read this. It discovers that a score carried almost entirely by slow pairs means distance, and it learns that distance does not necessarily mean irrelevance.
 
-This is the deeper elegance of RoPE. Paired with attention, it doesn't just encode where tokens are, also encodes how confidently two tokens can hear each other and lets the model learn what to do with that confidence.
+The elegance of RoPE comes from the way it pairs with attention. It encodes token positions while creating a natural decay that the model learns to navigate. By preserving these low-frequency signals over thousands of positions, RoPE allows the attention mechanism to gauge how loudly two tokens can hear each other. This lets the model develop its own sense of confidence, deciding exactly which distant whispers are worth its focus.
 
 # No extra weights
 
