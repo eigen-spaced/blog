@@ -182,7 +182,7 @@ The elegance of RoPE comes from the way it pairs with attention. It encodes toke
 
 # No extra weights
 
-RoPE is parameter-free because there's no lookup table of learned positions the model has to store. No $P_0, P_1, P_2...$ sitting in memory. It's a fixed geometric rule applied directly to the vectors at runtime, every time, from a deterministic formula.
+Another layer of elegance that RoPE brings is that it doesn't add any extra weights to the model. RoPE is parameter-free, and it is parameter-free because there's no lookup table of learned positions the model has to store. No $P_0, P_1, P_2...$ sitting in memory. It's a fixed geometric rule applied directly to the vectors at runtime, every time, from a deterministic formula.
 
 That said, RoPE does shape what the weights learn. The model trains on vectors that have already been rotated, so the weights adapt to interpret that rotated geometry. But they don't store the rotations themselves. Rather, the rotation is always computed fresh from the formula.
 

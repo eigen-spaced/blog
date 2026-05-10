@@ -29,7 +29,8 @@
     "remark-toc": "^9.0.0",
     "satori": "^0.12.2",
     "sharp": "^0.33.5",
-    "tailwindcss": "^4.2.2"
+    "tailwindcss": "^4.2.2",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.8",
@@ -38,6 +39,7 @@
     "@tailwindcss/typography": "^0.5.19",
     "@types/d3": "^7.4.3",
     "@types/lodash.kebabcase": "^4.1.9",
+    "@types/three": "^0.184.1",
     "@typescript-eslint/parser": "^8.59.0",
     "eslint": "^9.39.4",
     "eslint-plugin-astro": "^1.7.0",
