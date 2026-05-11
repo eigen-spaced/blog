@@ -3,21 +3,6 @@
 ---
 
 <div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
-  <p class="mb-4 text-base leading-relaxed text-gray-400">
-    One 64-dim embedding, two views of it. <strong class="text-sky-400"
-      >Q</strong
-    > is the embedding rotated to position <em>m<sub>A</sub> = 2</em> — drawn as outlined
-    bars, frozen.
-    <strong class="text-amber-400">K</strong> is the same embedding rotated to wherever
-    the slider sits — drawn as filled bars on top. At <em>m<sub>B</sub> = 2</em> the
-    two are identical, so every K bar fills its own Q outline exactly. Slide K away
-    and watch:
-    <strong style="color:#fb923c">fast pairs (left, orange)</strong> swing wildly
-    out of their outlines; <strong style="color:#34d399"
-      >slow pairs (right, emerald)</strong
-    > barely peek past theirs.
-  </p>
-
   <div class="mb-3">
     <label
       class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
@@ -44,11 +29,18 @@
   </div>
 
   <div
-    class="mt-2 mb-1 flex flex-wrap gap-4 text-[0.78rem] font-semibold tracking-wider uppercase"
+    class="mt-2 mb-1 flex flex-wrap items-center gap-5 text-[0.85rem] text-slate-300"
   >
-    <span class="text-sky-300/80">outlined: Q (m<sub>A</sub> = 2, frozen)</span>
-    <span class="text-amber-300/80">filled: K (m<sub>B</sub> = slider)</span>
+    <span class="inline-flex items-center gap-2">
+      <span class="inline-block h-3 w-3 border-[1.5px] border-slate-300"></span>
+      Query (Fixed)
+    </span>
+    <span class="inline-flex items-center gap-2">
+      <span class="inline-block h-3 w-3 bg-slate-300"></span>
+      Key (Variable)
+    </span>
   </div>
+
   <div class="overflow-x-auto">
     <svg id="pr-chart"></svg>
   </div>

@@ -152,11 +152,11 @@ The visual below uses the same base embedding for both Q and K tokens. Q is froz
   <RoPEPairedRotation />
 </div>
 
-The fast pairs on the left swing immediately out of their outlines, K's filled bars pulling away from Q's outlines with every step. The slow pairs on the right barely shift, their filled bars staying close to where Q left them even as the distance grows large.
+What's happening? The fast pairs (orange) on the left swing with every step, while the slow pairs (emerald) are nearly indifferent to the distance. And we kind of observed this a few sections ago, how different dimensions rotate at different speeds.
 
-There is an element of token influence in all this. Fast pairs are highly sensitive to nearby tokens but quickly become unreliable at distance. Slow pairs are nearly indifferent to close neighbours but carry a stable signal over long range. Together they give attention a kind of depth, a way of weighing relationships differently depending on how far apart two tokens are.
+This creates a kind of *attention depth*. Fast pairs are highly sensitive to nearby tokens but become "noisy" and unreliable at a distance. Slow pairs ignore immediate neighbors but maintain a stable, coherent signal over long ranges. Together, they allow the model to distinguish between a word’s local context and its global position.
 
-The heatmap below shows the same behaviour but across all distances at once. Each row is a dimension pair - fast at the top, slow at the bottom.
+While the slider lets you feel the movement for a single token, we can map this entire behavior across a whole sequence. The heatmap below collapses that movement into a single view, showing how each dimension pair evolves as distance grows. Each row is a dimension pair; fast at the top, slow at the bottom.
 
 <div class="not-prose">
   <RoPEDotProduct />
@@ -164,21 +164,23 @@ The heatmap below shows the same behaviour but across all distances at once. Eac
 
 Read it top to bottom at any distance: the fast pairs are already oscillating, flickering between agreement and opposition within just a handful of positions. The slow pairs hold steady, barely changing colour even hundreds of positions apart.
 
-Read it left to right: up close, nearly everything is orange — Q and K agree broadly across all pairs. As the distance grows, the fast pairs fracture into alternating bands of orange and blue, their signal dissolving into noise. The slow pairs fade more gracefully, holding their warmth far longer before they too begin to drift.
+Read it left to right: At zero distance, the map is solid orange because Q and K are in perfect sync. As you move further out, those fast pairs at the top begin to strobe rapidly between orange and blue as their signal turns into high-frequency jitter. Meanwhile, the slow pairs hold their warmth much longer, staying steady well after the top rows have blurred.
 
-Notice the slow pairs at the bottom. They hold their orange signal for a long time — but eventually, even they start cooling toward blue, then warming back toward orange again. This is the rotation completing a full cycle — the geometry folding back on itself. It's a glimpse of a real constraint: push a model beyond the sequence lengths it was trained on, and the positional language it learned starts to lose its meaning. But that's a thread worth pulling on separately.
+Notice how the slow pairs stay orange for a long stretch, but eventually even they cool into blue before warming back up to orange again. You are watching the rotation finish a full lap as the geometry circles back on itself. This points to a major practical limit: if you push a model past its training window, its positional vocabulary starts to repeat and lose its unique meaning. That is a deeper topic worth exploring some other time.
 
 ---
 
-Imagine two people explaining a topic to you. They are talking about the same thing not contributing in different ways. One is sitting next to you and the other one across a noisy room. The person beside you conveys everything: subtle shifts in tone, emphasis, on specific words, the fine details of every sentence. Meanwhile the person across the room must shout. You only catch fragments - the loudest words, the broadest strokes as the finer nuance fail to travel the distance. Yet those shouted fragments still matter. They provide a baseline context to what the nearby might overlook.
+And why does this matter? The best analogy I could come up with is this: imagine two people explaining a topic to you. They are talking about the same thing but contribute in different ways. One is sitting next to you and the other one across a noisy room.
 
-This is essentially what happens when an attention compares tokens across different distances. When two tokens are close, both fast- and slow-rotating pairs contribute to the dot product; because every dimension remains relatively aligned, the resulting score is high-resolution and rich in detail. 
+The person beside you conveys everything: subtle shifts in tone, emphasis, on specific words, the fine details of every sentence. Meanwhile the person across the room must shout. You only catch fragments: the loudest words, the broadest strokes as the finer nuance fail to travel the distance. Yet those shouted fragments still matter. They provide a baseline context that the nearby person might overlook.
+
+This is exactly what happens when an attention compares tokens across different distances. When two tokens are close, both fast and slow-rotating pairs contribute to the dot product. Because every dimension remains relatively aligned, the resulting score is high-resolution and rich in detail. 
 
 However, as tokens move apart, the high frequency fast pairs rotate so many times they eventually collapse to incoherent noise. What remains is the quiet, steady signal of the slow pairs. These dimensions complete their rotation cycles over thousands of positions, remaining remarkably stable and providing a consistent "shouted" context even across vast distances.
 
-This matters more than you might think. Consider a token like "it" at position 120 referring back to "dog" at position 3. Across that distance, the fast rotating pairs have long since dissolved into noise, but the slow pairs have barely shifted. Their vectors are still close enough in angle that they contribute a faint but real signal to the dot product. During training, the model learns to read this. It discovers that a score carried almost entirely by slow pairs means distance, and it learns that distance does not necessarily mean irrelevance.
+This isn't just a geometric quirk. Consider a token like "it" at position 120 referring back to "dog" at position 3. Across that distance, the fast rotating pairs have long since dissolved into noise, but the slow pairs have barely shifted. Their vectors are still close enough in angle that they contribute a faint but real signal to the dot product. During training, the model learns to read this. It discovers that a score carried almost entirely by slow pairs means distance, and it learns that distance does not necessarily mean irrelevance.
 
-The elegance of RoPE comes from the way it pairs with attention. It encodes token positions while creating a natural decay that the model learns to navigate. By preserving these low-frequency signals over thousands of positions, RoPE allows the attention mechanism to gauge how loudly two tokens can hear each other. This lets the model develop its own sense of confidence, deciding exactly which distant whispers are worth its focus.
+The real beauty of RoPE is how seamlessly it weaves into the attention mechanism. It doesn't just label where a token is; it creates a structural gradient that the model learns to use. By preserving those steady, low-frequency channels over thousands of tokens, RoPE gives the model a way to judge the *volume* of every relationship between each token in a sequence. It allows the attention mechanism to filter out the high-frequency noise and pick out the meaningful "shouts" that still carry weight across the entire sequence.
 
 # The Parameter-Free Advantage
 
@@ -200,7 +202,7 @@ That’s where RoPE shifts from elegant to subtle.
 
 What happens when those positional signals begin to blur? How does attention behave when distance becomes ambiguous? And what does that mean for models operating over very long contexts?
 
-That will be the next piece I explore in another write-up.
+I plan on exploring these questions in another write-up.
 
 Thank you for reading :)
 
