@@ -1,0 +1,1059 @@
+---
+/** Overloaded latent-space superposition visual for LoRe. */
+---
+
+<section
+  class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5 font-sans text-gray-100"
+>
+  <div class="st-controls">
+    <span class="st-controls-label">Capacity mode:</span>
+    <div
+      id="st-mode-tabs"
+      class="st-tabs"
+      role="tablist"
+      aria-label="Capacity mode"
+    >
+      <button class="st-tab" data-mode="clean" type="button"
+        >Clean capacity</button
+      >
+      <button class="st-tab st-tab-active" data-mode="super" type="button"
+        >Superposition</button
+      >
+    </div>
+  </div>
+
+  <div class="st-mode-summary">
+    <div id="st-mode-title" class="st-mode-title"></div>
+    <div id="st-mode-copy" class="st-mode-copy"></div>
+  </div>
+
+  <div class="st-visual-grid">
+    <div class="st-chart-shell">
+      <svg
+        id="st-chart"
+        viewBox="0 0 760 710"
+        preserveAspectRatio="xMidYMid meet"></svg>
+      <div id="st-tooltip" class="st-tooltip" hidden></div>
+    </div>
+  </div>
+
+  <div class="st-stats">
+    <div class="st-stat">
+      <span class="st-stat-label">Hidden dimensions</span>
+      <span class="st-stat-value">D = 2</span>
+    </div>
+    <div class="st-stat">
+      <span class="st-stat-label">Concepts packed</span>
+      <span class="st-stat-value" id="st-n-val">8</span>
+    </div>
+    <div class="st-stat">
+      <span class="st-stat-label">Interference score</span>
+      <span class="st-stat-value" id="st-interference">0%</span>
+    </div>
+  </div>
+
+  <div class="st-explain">
+    <p class="st-caption">
+      Multiple reward concepts now partially share the same latent directions.
+      The model can still use them, but they are no longer independently
+      inspectable.
+    </p>
+    <p class="st-note">
+      This is why LoRe’s latent reward bases are not automatically
+      interpretable: decomposition gives us bases, but superposition means those
+      bases may still be mixtures.
+    </p>
+  </div>
+</section>
+
+<style is:global>
+  .st-controls,
+  .st-chart-shell,
+  .st-stats,
+  .st-caption,
+  .st-note,
+  .st-mode-summary,
+  .st-mode-title,
+  .st-mode-copy,
+  .st-visual-grid,
+  .st-tooltip {
+    --st-bg-secondary: rgba(255, 255, 255, 0.04);
+    --st-text-primary: #e5e7eb;
+    --st-text-secondary: #9ca3af;
+    --st-text-muted: #6b7280;
+    --st-border-soft: rgba(255, 255, 255, 0.08);
+    --st-info-color: #4a9ee0;
+  }
+
+  .st-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .st-controls-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--st-text-secondary);
+  }
+
+  .st-tabs {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 3px;
+    border: 1px solid var(--st-border-soft);
+    background: var(--st-bg-secondary);
+  }
+
+  .st-tab {
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--st-text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    transition:
+      background 140ms ease,
+      color 140ms ease;
+  }
+
+  .st-tab:hover {
+    color: var(--st-text-primary);
+  }
+
+  .st-tab-active {
+    background: rgba(74, 158, 224, 0.22);
+    color: #cfe6f8;
+  }
+
+  .st-mode-summary {
+    margin-bottom: 14px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--st-border-soft);
+    border-radius: 8px;
+  }
+
+  .st-mode-title {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--st-text-primary);
+    margin-bottom: 4px;
+  }
+
+  .st-mode-copy {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    color: #94a3b8;
+  }
+
+  .st-chart-shell {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 760 / 710;
+    min-height: 0;
+    background: #05060d;
+    border: 1px solid var(--st-border-soft);
+    border-radius: 10px;
+    padding: 10px;
+    overflow: hidden;
+  }
+
+  #st-chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+  }
+
+  .st-tooltip {
+    position: absolute;
+    min-width: 170px;
+    max-width: 220px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(9, 12, 22, 0.95);
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+    color: var(--st-text-primary);
+    font-size: 14px;
+    line-height: 1.45;
+    pointer-events: none;
+    z-index: 3;
+  }
+
+  .st-tooltip strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #f8fafc;
+  }
+
+  .st-visual-grid {
+    margin-bottom: 14px;
+  }
+
+  .st-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+  }
+
+  .st-stat {
+    min-height: 72px;
+    padding: 12px 14px;
+    background: var(--st-bg-secondary);
+    border: 1px solid var(--st-border-soft);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .st-stat-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    color: var(--st-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .st-stat-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--st-text-primary);
+  }
+
+  .st-explain {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .st-caption,
+  .st-note {
+    margin: 0;
+    padding: 14px 18px;
+    background: var(--st-bg-secondary);
+    border: 1px solid var(--st-border-soft);
+    border-radius: 6px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--st-text-primary);
+  }
+
+  .st-caption {
+    border-left: 3px solid var(--st-info-color);
+  }
+
+  .st-note {
+    color: #cbd5e1;
+  }
+
+  @media (max-width: 760px) {
+    .st-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .st-explain {
+      grid-template-columns: 1fr;
+    }
+
+    .st-chart-shell {
+      min-height: 360px;
+    }
+  }
+</style>
+
+<script>
+  import * as d3 from "d3";
+
+  type Mode = "clean" | "super";
+
+  type Concept = {
+    id: string;
+    label: string;
+    short: string;
+    color: string;
+    clusterId: number;
+    cleanAngle: number;
+    cleanRadius: number;
+    superAngle: number;
+    superRadius: number;
+    cleanLabelDx: number;
+    cleanLabelDy: number;
+    superLabelDx: number;
+    superLabelDy: number;
+  };
+
+  type ConceptState = {
+    angle: number;
+    radius: number;
+    opacity: number;
+    labelDx: number;
+    labelDy: number;
+    leaderOpacity: number;
+  };
+
+  type ClusterInfo = {
+    id: string;
+    label: string;
+    angle: number;
+    radius: number;
+    width: number;
+    color: string;
+    opacity: number;
+    tooltip: string;
+  };
+
+  const CONCEPTS: Concept[] = [
+    {
+      id: "helpful",
+      label: "Helpful",
+      short: "Help",
+      color: "#58b7ff",
+      clusterId: 0,
+      cleanAngle: -1.48,
+      cleanRadius: 166,
+      superAngle: -0.92,
+      superRadius: 158,
+      cleanLabelDx: 18,
+      cleanLabelDy: -12,
+      superLabelDx: 12,
+      superLabelDy: -16,
+    },
+    {
+      id: "honest",
+      label: "Honest",
+      short: "Hon",
+      color: "#39d3b0",
+      clusterId: 0,
+      cleanAngle: 0.14,
+      cleanRadius: 162,
+      superAngle: -0.885,
+      superRadius: 165,
+      cleanLabelDx: 16,
+      cleanLabelDy: -2,
+      superLabelDx: 10,
+      superLabelDy: -4,
+    },
+    {
+      id: "safe",
+      label: "Safe",
+      short: "Safe",
+      color: "#f7b34d",
+      clusterId: 0,
+      cleanAngle: 0.18,
+      cleanRadius: 158,
+      superAngle: -0.845,
+      superRadius: 152,
+      cleanLabelDx: 16,
+      cleanLabelDy: 12,
+      superLabelDx: 12,
+      superLabelDy: 12,
+    },
+    {
+      id: "polite",
+      label: "Polite",
+      short: "Pol",
+      color: "#fb7185",
+      clusterId: 1,
+      cleanAngle: 0.24,
+      cleanRadius: 156,
+      superAngle: 0.47,
+      superRadius: 162,
+      cleanLabelDx: 16,
+      cleanLabelDy: 8,
+      superLabelDx: 12,
+      superLabelDy: -12,
+    },
+    {
+      id: "warm",
+      label: "Warm",
+      short: "Warm",
+      color: "#c084fc",
+      clusterId: 1,
+      cleanAngle: 0.28,
+      cleanRadius: 154,
+      superAngle: 0.515,
+      superRadius: 171,
+      cleanLabelDx: 16,
+      cleanLabelDy: 10,
+      superLabelDx: 10,
+      superLabelDy: 0,
+    },
+    {
+      id: "agreeable",
+      label: "Agreeable",
+      short: "Agr",
+      color: "#f472b6",
+      clusterId: 1,
+      cleanAngle: 0.34,
+      cleanRadius: 154,
+      superAngle: 0.555,
+      superRadius: 164,
+      cleanLabelDx: 16,
+      cleanLabelDy: 14,
+      superLabelDx: 10,
+      superLabelDy: 14,
+    },
+    {
+      id: "concise",
+      label: "Concise",
+      short: "Con",
+      color: "#a3e635",
+      clusterId: 2,
+      cleanAngle: 1.82,
+      cleanRadius: 156,
+      superAngle: 2.42,
+      superRadius: 150,
+      cleanLabelDx: -18,
+      cleanLabelDy: 6,
+      superLabelDx: -10,
+      superLabelDy: -4,
+    },
+    {
+      id: "confident",
+      label: "Confident",
+      short: "Conf",
+      color: "#f97316",
+      clusterId: 2,
+      cleanAngle: 1.88,
+      cleanRadius: 158,
+      superAngle: 2.46,
+      superRadius: 160,
+      cleanLabelDx: -18,
+      cleanLabelDy: 18,
+      superLabelDx: -10,
+      superLabelDy: 14,
+    },
+  ];
+
+  const CLEAN_IDS = ["helpful", "honest"];
+  const CLUSTER_TOOLTIPS: Record<string, string> = {
+    cluster0:
+      "<strong>Shared direction encodes:</strong>Helpful: 42%<br>Honest: 31%<br>Safe: 27%",
+    cluster1:
+      "<strong>Shared direction encodes:</strong>Warm: 38%<br>Agreeable: 34%<br>Polite: 28%",
+    cluster2:
+      "<strong>Shared direction encodes:</strong>Concise: 56%<br>Confident: 44%",
+  };
+
+  const cx = 380;
+  const cy = 355;
+  const GRAPH_SCALE = 1.8;
+  const MAX_R = 307;
+  const PLOT_SCALE = GRAPH_SCALE;
+  const ANIM_MS = 560;
+  const LABEL_R = 42;
+
+  const svg = d3.select<SVGSVGElement, unknown>("#st-chart");
+  const chartEl = document.querySelector<SVGSVGElement>("#st-chart")!;
+  const chartShellEl = document.querySelector(
+    ".st-chart-shell"
+  ) as HTMLDivElement;
+  const tooltipEl = document.getElementById("st-tooltip") as HTMLDivElement;
+  const tabsRoot = document.getElementById("st-mode-tabs")!;
+  const nValEl = document.getElementById("st-n-val")!;
+  const interferenceEl = document.getElementById("st-interference")!;
+  const reduceMotion = window.matchMedia(
+    "(prefers-reduced-motion: reduce)"
+  ).matches;
+
+  const defs = svg.append("defs");
+
+  const glow = defs.append("filter").attr("id", "st-soft-glow");
+  glow.append("feGaussianBlur").attr("stdDeviation", 7).attr("result", "blur");
+  const glowMerge = glow.append("feMerge");
+  glowMerge.append("feMergeNode").attr("in", "blur");
+  glowMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+  const softGlow = defs.append("filter").attr("id", "st-cloud-glow");
+  softGlow
+    .append("feGaussianBlur")
+    .attr("stdDeviation", 22)
+    .attr("result", "cloudBlur");
+  const softMerge = softGlow.append("feMerge");
+  softMerge.append("feMergeNode").attr("in", "cloudBlur");
+  softMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+  const pressureGrad = defs
+    .append("radialGradient")
+    .attr("id", "st-pressure-grad");
+  pressureGrad
+    .append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#e879f9")
+    .attr("stop-opacity", 0.32);
+  pressureGrad
+    .append("stop")
+    .attr("offset", "50%")
+    .attr("stop-color", "#60a5fa")
+    .attr("stop-opacity", 0.16);
+  pressureGrad
+    .append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#05060d")
+    .attr("stop-opacity", 0);
+
+  const blueCloud = defs.append("radialGradient").attr("id", "st-cluster-blue");
+  blueCloud
+    .append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#60a5fa")
+    .attr("stop-opacity", 0.32);
+  blueCloud
+    .append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#60a5fa")
+    .attr("stop-opacity", 0);
+
+  const pinkCloud = defs.append("radialGradient").attr("id", "st-cluster-pink");
+  pinkCloud
+    .append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#f472b6")
+    .attr("stop-opacity", 0.28);
+  pinkCloud
+    .append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#f472b6")
+    .attr("stop-opacity", 0);
+
+  const limeCloud = defs.append("radialGradient").attr("id", "st-cluster-lime");
+  limeCloud
+    .append("stop")
+    .attr("offset", "0%")
+    .attr("stop-color", "#a3e635")
+    .attr("stop-opacity", 0.26);
+  limeCloud
+    .append("stop")
+    .attr("offset", "100%")
+    .attr("stop-color", "#a3e635")
+    .attr("stop-opacity", 0);
+
+  const axisLayer = svg.append("g");
+  const fieldLayer = svg.append("g").style("mix-blend-mode", "screen");
+  const clusterLayer = svg.append("g");
+  const labelLayer = svg.append("g");
+
+  axisLayer
+    .append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", MAX_R)
+    .attr("fill", "none")
+    .attr("stroke", "rgba(90, 98, 123, 0.35)")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "4 7");
+
+  axisLayer
+    .append("circle")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 183)
+    .attr("fill", "none")
+    .attr("stroke", "rgba(90, 98, 123, 0.18)")
+    .attr("stroke-width", 1)
+    .attr("stroke-dasharray", "3 7");
+
+  axisLayer
+    .append("line")
+    .attr("x1", cx - 341)
+    .attr("y1", cy)
+    .attr("x2", cx + 341)
+    .attr("y2", cy)
+    .attr("stroke", "rgba(90, 98, 123, 0.26)")
+    .attr("stroke-width", 1);
+
+  axisLayer
+    .append("line")
+    .attr("x1", cx)
+    .attr("y1", cy - 341)
+    .attr("x2", cx)
+    .attr("y2", cy + 341)
+    .attr("stroke", "rgba(90, 98, 123, 0.26)")
+    .attr("stroke-width", 1);
+
+  axisLayer
+    .append("text")
+    .attr("x", cx + 348)
+    .attr("y", cy + 4)
+    .attr("fill", "#6b7280")
+    .attr("font-size", "14px")
+    .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
+    .text("d1");
+
+  axisLayer
+    .append("text")
+    .attr("x", cx + 6)
+    .attr("y", cy - MAX_R - 16)
+    .attr("fill", "#6b7280")
+    .attr("font-size", "14px")
+    .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
+    .text("d2");
+
+  const conceptsById = new Map(CONCEPTS.map(concept => [concept.id, concept]));
+  const states = new Map<string, ConceptState>(
+    CONCEPTS.map(concept => [
+      concept.id,
+      {
+        angle: concept.superAngle,
+        radius: concept.superRadius,
+        opacity: 1,
+        labelDx: concept.superLabelDx,
+        labelDy: concept.superLabelDy,
+        leaderOpacity: 0.45,
+      },
+    ])
+  );
+
+  const conceptGroups = fieldLayer
+    .selectAll<SVGGElement, Concept>("g.st-concept")
+    .data(CONCEPTS, d => d.id)
+    .join("g")
+    .attr("class", "st-concept");
+
+  conceptGroups
+    .append("path")
+    .attr("class", "st-band")
+    .attr("fill", "none")
+    .attr("stroke", d => d.color)
+    .attr("stroke-width", 18)
+    .attr("stroke-linecap", "round")
+    .attr("stroke-opacity", 0.2)
+    .attr("filter", "url(#st-soft-glow)");
+
+  conceptGroups
+    .append("line")
+    .attr("class", "st-vector")
+    .attr("x1", cx)
+    .attr("y1", cy)
+    .attr("x2", cx)
+    .attr("y2", cy)
+    .attr("stroke", d => d.color)
+    .attr("stroke-width", 3)
+    .attr("stroke-linecap", "round")
+    .attr("stroke-opacity", 0.86);
+
+  conceptGroups
+    .append("circle")
+    .attr("class", "st-node-glow")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 12)
+    .attr("fill", d => d.color)
+    .attr("fill-opacity", 0.16)
+    .attr("filter", "url(#st-soft-glow)");
+
+  conceptGroups
+    .append("circle")
+    .attr("class", "st-node")
+    .attr("cx", cx)
+    .attr("cy", cy)
+    .attr("r", 5)
+    .attr("fill", d => d.color);
+
+  const labelGroups = labelLayer
+    .selectAll<SVGGElement, Concept>("g.st-label")
+    .data(CONCEPTS, d => d.id)
+    .join("g")
+    .attr("class", "st-label");
+
+  labelGroups
+    .append("line")
+    .attr("class", "st-leader")
+    .attr("stroke", d => d.color)
+    .attr("stroke-width", 1)
+    .attr("stroke-opacity", 0.28);
+
+  labelGroups
+    .append("text")
+    .attr("class", "st-label-text")
+    .attr("fill", d => d.color)
+    .attr("font-size", "15px")
+    .attr("font-weight", 600)
+    .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+    .text(d => d.label);
+
+  const activeIds = new Set<string>();
+  let currentMode: Mode = "super";
+  let startTime = performance.now();
+
+  function activeConceptsFor(mode: Mode): Concept[] {
+    return mode === "clean"
+      ? CLEAN_IDS.map(id => conceptsById.get(id)!).filter(Boolean)
+      : CONCEPTS;
+  }
+
+  function targetStateFor(concept: Concept, mode: Mode): ConceptState {
+    const isActive = mode === "super" || CLEAN_IDS.includes(concept.id);
+    if (!isActive) {
+      const prev = states.get(concept.id)!;
+      return {
+        angle: prev.angle,
+        radius: prev.radius,
+        opacity: 0,
+        labelDx: prev.labelDx,
+        labelDy: prev.labelDy,
+        leaderOpacity: 0,
+      };
+    }
+
+    if (mode === "clean") {
+      return {
+        angle: concept.cleanAngle,
+        radius: concept.cleanRadius * PLOT_SCALE,
+        opacity: 1,
+        labelDx: concept.cleanLabelDx,
+        labelDy: concept.cleanLabelDy,
+        leaderOpacity: 0.08,
+      };
+    }
+
+    return {
+      angle: concept.superAngle,
+      radius: concept.superRadius * PLOT_SCALE,
+      opacity: 1,
+      labelDx: concept.superLabelDx,
+      labelDy: concept.superLabelDy,
+      leaderOpacity: 0.42,
+    };
+  }
+
+  function computeSimilarity(mode: Mode): number[][] {
+    const active = activeConceptsFor(mode);
+    return active.map(a =>
+      active.map(b =>
+        Math.cos(
+          (mode === "clean" ? a.cleanAngle : a.superAngle) -
+            (mode === "clean" ? b.cleanAngle : b.superAngle)
+        )
+      )
+    );
+  }
+
+  function interferenceScore(matrix: number[][]): number {
+    let total = 0;
+    let count = 0;
+    for (let i = 0; i < matrix.length; i++) {
+      for (let j = 0; j < matrix.length; j++) {
+        if (i === j) continue;
+        total += Math.abs(matrix[i][j]);
+        count += 1;
+      }
+    }
+    return count ? total / count : 0;
+  }
+
+  function arcPath(angle: number, radius: number, width: number): string {
+    const x0 = cx + 18 * Math.cos(angle);
+    const y0 = cy + 18 * Math.sin(angle);
+    const x1 = cx + radius * Math.cos(angle);
+    const y1 = cy + radius * Math.sin(angle);
+    const ctrlX =
+      cx +
+      radius * 0.56 * Math.cos(angle) +
+      width * Math.cos(angle + Math.PI / 2);
+    const ctrlY =
+      cy +
+      radius * 0.56 * Math.sin(angle) +
+      width * Math.sin(angle + Math.PI / 2);
+    return `M ${x0} ${y0} Q ${ctrlX} ${ctrlY} ${x1} ${y1}`;
+  }
+
+  function clusterData(mode: Mode): ClusterInfo[] {
+    if (mode === "clean") return [];
+    return [
+      {
+        id: "cluster0",
+        label: "Helpful / Honest / Safe",
+        angle: -0.885,
+        radius: 162 * PLOT_SCALE,
+        width: -20 * PLOT_SCALE,
+        color: "#60a5fa",
+        opacity: 0.22,
+        tooltip: CLUSTER_TOOLTIPS.cluster0,
+      },
+      {
+        id: "cluster1",
+        label: "Warm / Agreeable / Polite",
+        angle: 0.515,
+        radius: 170 * PLOT_SCALE,
+        width: 18 * PLOT_SCALE,
+        color: "#f472b6",
+        opacity: 0.2,
+        tooltip: CLUSTER_TOOLTIPS.cluster1,
+      },
+      {
+        id: "cluster2",
+        label: "Concise / Confident",
+        angle: 2.44,
+        radius: 156 * PLOT_SCALE,
+        width: -12 * PLOT_SCALE,
+        color: "#a3e635",
+        opacity: 0.18,
+        tooltip: CLUSTER_TOOLTIPS.cluster2,
+      },
+    ];
+  }
+
+  function showTooltip(content: string, x: number, y: number) {
+    const chartRect = chartEl.getBoundingClientRect();
+    const shellRect = chartShellEl.getBoundingClientRect();
+    const scaleX = chartRect.width / 760;
+    const scaleY = chartRect.height / 710;
+    const pad = 12;
+    tooltipEl.innerHTML = content;
+    tooltipEl.hidden = false;
+
+    const anchorX = x * scaleX + (chartRect.left - shellRect.left);
+    const anchorY = y * scaleY + (chartRect.top - shellRect.top);
+    const tooltipRect = tooltipEl.getBoundingClientRect();
+    const shellWidth = shellRect.width;
+    const shellHeight = shellRect.height;
+    const left = Math.min(
+      Math.max(anchorX - tooltipRect.width / 2, pad),
+      shellWidth - tooltipRect.width - pad
+    );
+    const aboveTop = anchorY - tooltipRect.height - pad;
+    const belowTop = anchorY + pad;
+    const top =
+      aboveTop >= pad
+        ? aboveTop
+        : Math.min(belowTop, shellHeight - tooltipRect.height - pad);
+
+    tooltipEl.style.left = `${left}px`;
+    tooltipEl.style.top = `${top}px`;
+  }
+
+  function hideTooltip() {
+    tooltipEl.hidden = true;
+  }
+
+  function drawClusterZones(mode: Mode) {
+    const data = clusterData(mode);
+    const clusters = clusterLayer
+      .selectAll<SVGGElement, ClusterInfo>("g.st-cluster-zone")
+      .data(data, d => d.id)
+      .join(
+        enter => {
+          const g = enter.append("g").attr("class", "st-cluster-zone");
+          g.append("path")
+            .attr("class", "st-cluster-band")
+            .attr("fill", "none")
+            .attr("stroke-linecap", "round")
+            .attr("stroke-width", 40)
+            .attr("filter", "url(#st-cloud-glow)")
+            .style("cursor", "default");
+          g.append("path")
+            .attr("class", "st-cluster-hit")
+            .attr("fill", "none")
+            .attr("stroke", "transparent")
+            .attr("stroke-linecap", "round")
+            .attr("stroke-width", 56)
+            .style("cursor", "default");
+          return g;
+        },
+        update => update,
+        exit => exit.remove()
+      );
+
+    clusters
+      .select<SVGPathElement>("path.st-cluster-band")
+      .transition()
+      .duration(ANIM_MS)
+      .ease(d3.easeCubicInOut)
+      .attr("stroke", d => d.color)
+      .attr("stroke-opacity", d => d.opacity)
+      .attr("d", d => arcPath(d.angle, d.radius, d.width));
+
+    clusters
+      .select<SVGPathElement>("path.st-cluster-hit")
+      .attr("d", d => arcPath(d.angle, d.radius, d.width))
+      .on("mouseenter", (_event, d) => {
+        const tx = cx + (d.radius + 8) * Math.cos(d.angle);
+        const ty = cy + (d.radius + 8) * Math.sin(d.angle);
+        showTooltip(d.tooltip, tx, ty);
+      })
+      .on("mousemove", (_event, d) => {
+        const tx = cx + (d.radius + 8) * Math.cos(d.angle);
+        const ty = cy + (d.radius + 8) * Math.sin(d.angle);
+        showTooltip(d.tooltip, tx, ty);
+      })
+      .on("mouseleave", hideTooltip);
+  }
+
+  function drawPressureClouds() {
+    svg.selectAll("ellipse").remove();
+  }
+
+  function renderFrame(now: number) {
+    const elapsed = (now - startTime) / 1000;
+
+    conceptGroups.each(function (concept) {
+      const base = states.get(concept.id)!;
+      const isActive = activeIds.has(concept.id);
+      const jitterAmp = reduceMotion
+        ? 0
+        : currentMode === "super"
+          ? 0.03
+          : 0.004;
+      const radialAmp = reduceMotion
+        ? 0
+        : currentMode === "super"
+          ? 5.5 * GRAPH_SCALE
+          : 1.2 * GRAPH_SCALE;
+      const localPhase =
+        elapsed *
+        (0.82 + concept.clusterId * 0.2 + Math.abs(concept.superAngle) * 0.08);
+      const angle =
+        base.angle +
+        (isActive
+          ? Math.sin(localPhase + concept.clusterId * 0.9) * jitterAmp
+          : 0);
+      const radius =
+        base.radius +
+        (isActive
+          ? Math.cos(localPhase * 1.12 + concept.clusterId) * radialAmp
+          : 0);
+      const x = cx + radius * Math.cos(angle);
+      const y = cy + radius * Math.sin(angle);
+      const bandWidth =
+        currentMode === "super"
+          ? (24 + concept.clusterId * 5) * GRAPH_SCALE
+          : 3 * GRAPH_SCALE;
+      const labelX = x + base.labelDx + LABEL_R * Math.cos(angle) * 0.16;
+      const labelY = y + base.labelDy + LABEL_R * Math.sin(angle) * 0.1;
+
+      const sel = d3.select(this);
+      sel.style("opacity", base.opacity);
+      sel
+        .select<SVGPathElement>("path.st-band")
+        .attr("d", arcPath(angle, radius, bandWidth))
+        .attr("stroke-opacity", currentMode === "super" ? 0.22 : 0.03)
+        .attr("stroke-width", currentMode === "super" ? 18 : 6);
+      sel
+        .select<SVGLineElement>("line.st-vector")
+        .attr("x2", x)
+        .attr("y2", y)
+        .attr("stroke-opacity", currentMode === "super" ? 0.86 : 0.96)
+        .attr("stroke-width", currentMode === "super" ? 3 : 2.6);
+      sel
+        .select<SVGCircleElement>("circle.st-node-glow")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("fill-opacity", currentMode === "super" ? 0.18 : 0)
+        .attr("r", currentMode === "super" ? 12 : 0);
+      sel
+        .select<SVGCircleElement>("circle.st-node")
+        .attr("cx", x)
+        .attr("cy", y)
+        .attr("r", currentMode === "super" ? 5 : 4.5);
+
+      const labelSel = labelGroups.filter(d => d.id === concept.id);
+      labelSel.style("opacity", base.opacity);
+      labelSel
+        .select<SVGLineElement>("line.st-leader")
+        .attr("x1", x)
+        .attr("y1", y)
+        .attr("x2", labelX)
+        .attr("y2", labelY)
+        .attr("stroke-opacity", base.leaderOpacity);
+      labelSel
+        .select<SVGTextElement>("text.st-label-text")
+        .attr("x", labelX)
+        .attr("y", labelY)
+        .attr(
+          "text-anchor",
+          Math.cos(angle) > 0.15
+            ? "start"
+            : Math.cos(angle) < -0.15
+              ? "end"
+              : "middle"
+        );
+    });
+
+    if (!reduceMotion) {
+      window.requestAnimationFrame(renderFrame);
+    }
+  }
+
+  function setMode(mode: Mode) {
+    currentMode = mode;
+    hideTooltip();
+    activeIds.clear();
+    activeConceptsFor(mode).forEach(concept => activeIds.add(concept.id));
+
+    const title =
+      mode === "clean"
+        ? "Two concepts fit cleanly into D = 2"
+        : "Overloaded latent space: several concepts now share the same few directions";
+    const copy =
+      mode === "clean"
+        ? "Crisp axes, low overlap, and nearly independent directions."
+        : "Pressure builds as clusters pile into the same latent directions. Similar behaviors start blending together.";
+
+    const modeTitleEl = document.getElementById("st-mode-title");
+    const modeCopyEl = document.getElementById("st-mode-copy");
+    if (modeTitleEl) modeTitleEl.textContent = title;
+    if (modeCopyEl) modeCopyEl.textContent = copy;
+
+    tabsRoot.querySelectorAll<HTMLButtonElement>(".st-tab").forEach(button => {
+      button.classList.toggle("st-tab-active", button.dataset.mode === mode);
+    });
+
+    drawPressureClouds();
+    drawClusterZones(mode);
+
+    CONCEPTS.forEach(concept => {
+      const start = { ...states.get(concept.id)! };
+      const target = targetStateFor(concept, mode);
+      const transitionHost = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
+      );
+      d3.select(transitionHost)
+        .transition()
+        .transition()
+        .duration(ANIM_MS)
+        .ease(d3.easeCubicInOut)
+        .tween(`st-${concept.id}`, () => (t: number) => {
+          states.set(concept.id, {
+            angle: start.angle + (target.angle - start.angle) * t,
+            radius: start.radius + (target.radius - start.radius) * t,
+            opacity: start.opacity + (target.opacity - start.opacity) * t,
+            labelDx: start.labelDx + (target.labelDx - start.labelDx) * t,
+            labelDy: start.labelDy + (target.labelDy - start.labelDy) * t,
+            leaderOpacity:
+              start.leaderOpacity +
+              (target.leaderOpacity - start.leaderOpacity) * t,
+          });
+          if (reduceMotion) renderFrame(startTime);
+        });
+    });
+
+    const active = activeConceptsFor(mode);
+    nValEl.textContent = String(active.length);
+    interferenceEl.textContent = `${Math.round(interferenceScore(computeSimilarity(mode)) * 100)}%`;
+  }
+
+  tabsRoot.querySelectorAll<HTMLButtonElement>(".st-tab").forEach(button => {
+    button.addEventListener("click", () => {
+      const mode = (
+        button.dataset.mode === "clean" ? "clean" : "super"
+      ) as Mode;
+      setMode(mode);
+    });
+  });
+
+  chartShellEl.addEventListener("mouseleave", hideTooltip);
+
+  setMode("super");
+  renderFrame(startTime);
+</script>
