@@ -453,7 +453,7 @@
   const LABEL_R = 42;
 
   const svg = d3.select<SVGSVGElement, unknown>("#st-chart");
-  const chartEl = document.getElementById("st-chart") as SVGSVGElement;
+  const chartEl = document.querySelector<SVGSVGElement>("#st-chart")!;
   const chartShellEl = document.querySelector(
     ".st-chart-shell"
   ) as HTMLDivElement;
@@ -538,7 +538,6 @@
     .attr("stop-opacity", 0);
 
   const axisLayer = svg.append("g");
-  const pressureLayer = svg.append("g").style("mix-blend-mode", "screen");
   const fieldLayer = svg.append("g").style("mix-blend-mode", "screen");
   const clusterLayer = svg.append("g");
   const labelLayer = svg.append("g");
@@ -684,7 +683,6 @@
 
   const activeIds = new Set<string>();
   let currentMode: Mode = "super";
-  let frameHandle = 0;
   let startTime = performance.now();
 
   function activeConceptsFor(mode: Mode): Concept[] {
@@ -891,7 +889,7 @@
       .on("mouseleave", hideTooltip);
   }
 
-  function drawPressureClouds(mode: Mode) {
+  function drawPressureClouds() {
     svg.selectAll("ellipse").remove();
   }
 
@@ -982,7 +980,7 @@
     });
 
     if (!reduceMotion) {
-      frameHandle = window.requestAnimationFrame(renderFrame);
+      window.requestAnimationFrame(renderFrame);
     }
   }
 
@@ -1010,13 +1008,18 @@
       button.classList.toggle("st-tab-active", button.dataset.mode === mode);
     });
 
-    drawPressureClouds(mode);
+    drawPressureClouds();
     drawClusterZones(mode);
 
     CONCEPTS.forEach(concept => {
       const start = { ...states.get(concept.id)! };
       const target = targetStateFor(concept, mode);
-      d3.select({ t: 0 })
+      const transitionHost = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "g"
+      );
+      d3.select(transitionHost)
+        .transition()
         .transition()
         .duration(ANIM_MS)
         .ease(d3.easeCubicInOut)
