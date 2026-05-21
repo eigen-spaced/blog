@@ -1,0 +1,850 @@
+---
+/** Low-rank decomposition — 6×4 reward matrix factored into k named latent components. */
+---
+
+<section
+  class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5 font-sans text-gray-100"
+>
+  <div class="lr-controls">
+    <span class="lr-controls-label">Components k:</span>
+    <div id="lr-k-tabs" class="lr-tabs" role="tablist">
+      <button class="lr-tab" data-k="1" type="button">1</button>
+      <button class="lr-tab lr-tab-active" data-k="2" type="button">2</button>
+      <button class="lr-tab" data-k="3" type="button">3</button>
+    </div>
+    <label class="lr-toggle">
+      <input id="lr-show-numbers" type="checkbox" />
+      <span>Show numbers</span>
+    </label>
+  </div>
+
+  <div class="lr-chart-wrap">
+    <svg id="lr-chart" viewBox="0 0 760 330" preserveAspectRatio="xMidYMid meet"
+    ></svg>
+  </div>
+
+  <div class="lr-stats">
+    <div class="lr-stat">
+      <span class="lr-stat-label">Reconstruction error</span>
+      <span class="lr-stat-value" id="lr-error">--</span>
+    </div>
+    <div class="lr-stat">
+      <span class="lr-stat-label">Structure captured</span>
+      <span class="lr-stat-value" id="lr-variance">--</span>
+    </div>
+    <div class="lr-stat">
+      <span class="lr-stat-label">Preference compression</span>
+      <span class="lr-stat-value" id="lr-storage">--</span>
+    </div>
+  </div>
+</section>
+
+<style is:global>
+  .lr-controls,
+  .lr-chart-wrap,
+  .lr-stats,
+  .lr-caption {
+    --lr-bg-secondary: rgba(255, 255, 255, 0.04);
+    --lr-text-primary: #e5e7eb;
+    --lr-text-secondary: #9ca3af;
+    --lr-text-muted: #6b7280;
+    --lr-border-soft: rgba(255, 255, 255, 0.08);
+    --lr-info-color: #4a9ee0;
+  }
+
+  .lr-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+  .lr-controls-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: var(--lr-text-secondary);
+  }
+  .lr-tabs {
+    display: inline-flex;
+    border-radius: 999px;
+    padding: 3px;
+    border: 1px solid var(--lr-border-soft);
+    background: var(--lr-bg-secondary);
+  }
+  .lr-tab {
+    padding: 4px 14px;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--lr-text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    cursor: pointer;
+    border: none;
+    transition:
+      background 140ms ease,
+      color 140ms ease;
+  }
+  .lr-tab:hover {
+    color: var(--lr-text-primary);
+  }
+  .lr-tab-active {
+    background: rgba(74, 158, 224, 0.22);
+    color: #cfe6f8;
+  }
+  .lr-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 4px 10px;
+    border: 1px solid var(--lr-border-soft);
+    border-radius: 999px;
+    background: var(--lr-bg-secondary);
+    color: var(--lr-text-secondary);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .lr-toggle input {
+    accent-color: #4a9ee0;
+  }
+
+  .lr-chart-wrap {
+    width: 100%;
+    background: #05060d;
+    border: 1px solid var(--lr-border-soft);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 14px;
+  }
+  #lr-chart {
+    display: block;
+    width: 100%;
+    height: auto;
+    user-select: none;
+  }
+
+  .lr-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .lr-stat {
+    flex: 1 1 140px;
+    padding: 10px 14px;
+    background: var(--lr-bg-secondary);
+    border: 1px solid var(--lr-border-soft);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .lr-stat-label {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    color: var(--lr-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .lr-stat-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--lr-text-primary);
+  }
+
+  .lr-caption {
+    margin: 0;
+    padding: 12px 16px;
+    background: var(--lr-bg-secondary);
+    border: 1px solid var(--lr-border-soft);
+    border-left: 3px solid var(--lr-info-color);
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--lr-text-primary);
+    min-height: 64px;
+  }
+  .lr-hidden-number {
+    opacity: 0;
+  }
+  .lr-highlight {
+    stroke: #f8fafc;
+    stroke-width: 2;
+  }
+</style>
+
+<script>
+  import * as d3 from "d3";
+
+  type Decomp = {
+    factorNames: string[];
+    W: number[][];
+    R: number[][];
+  };
+
+  const USERS = ["Alice", "Bob", "Carol", "Dave", "Eve", "Frank"];
+  const FEATURES = ["Long expl.", "Humor", "Formal", "Warmth"];
+
+  // Observed preference matrix P (6 users × 4 response features), built from 3 archetypes
+  // so the visible structure (Alice/Bob ≈ analytical, Carol/Dave ≈ expressive) reads
+  // immediately.
+  const P: number[][] = [
+    [8.1, 2.6, 7.1, 3.2],
+    [6.8, 3.8, 6.3, 4.1],
+    [3.9, 7.4, 4.1, 6.8],
+    [4.0, 7.0, 4.3, 6.5],
+    [6.0, 5.0, 5.6, 5.0],
+    [5.3, 5.8, 5.1, 5.6],
+  ];
+
+  // Hand-designed best rank-k factorizations.
+  // (Equivalent to what NMF would discover; the named axes are interpretable.)
+  const DECOMPS: Record<1 | 2 | 3, Decomp> = {
+    1: {
+      factorNames: ["Overall"],
+      W: [[1.0], [1.0], [1.0], [1.0], [1.0], [1.0]],
+      R: [[5.7, 5.3, 5.4, 5.2]],
+    },
+    2: {
+      factorNames: ["Analytical", "Expressive"],
+      W: [
+        [0.8, 0.15],
+        [0.7, 0.25],
+        [0.15, 0.8],
+        [0.2, 0.75],
+        [0.5, 0.5],
+        [0.45, 0.55],
+      ],
+      R: [
+        [9, 1, 8, 2],
+        [2, 9, 3, 8],
+      ],
+    },
+    3: {
+      factorNames: ["Analytical", "Expressive", "Concise"],
+      W: [
+        [0.7, 0.1, 0.2],
+        [0.6, 0.3, 0.1],
+        [0.1, 0.7, 0.2],
+        [0.2, 0.7, 0.1],
+        [0.4, 0.4, 0.2],
+        [0.3, 0.5, 0.2],
+      ],
+      R: [
+        [9, 1, 8, 2],
+        [2, 9, 3, 8],
+        [8, 5, 6, 5],
+      ],
+    },
+  };
+
+  type Mode = 1 | 2 | 3;
+
+  function matmul(A: number[][], B: number[][]): number[][] {
+    const m = A.length,
+      p = A[0].length,
+      n = B[0].length;
+    const out: number[][] = Array.from({ length: m }, () =>
+      new Array(n).fill(0)
+    );
+    for (let i = 0; i < m; i++) {
+      for (let j = 0; j < n; j++) {
+        let s = 0;
+        for (let k = 0; k < p; k++) s += A[i][k] * B[k][j];
+        out[i][j] = s;
+      }
+    }
+    return out;
+  }
+
+  function frobenius(A: number[][]): number {
+    let s = 0;
+    for (const row of A) for (const x of row) s += x * x;
+    return Math.sqrt(s);
+  }
+
+  function diff(A: number[][], B: number[][]): number[][] {
+    return A.map((row, i) => row.map((x, j) => x - B[i][j]));
+  }
+
+  const P_FRO = frobenius(P);
+
+  // ---- Layout ----
+  const CELL_W = 40;
+  const CELL_H = 28;
+
+  const N_ROWS = 6; // users
+  const N_COLS = 4; // features
+
+  const TOP_LABEL_H = 128; // space for equation, headers, and rotated labels
+  const ROW_LABEL_W = 60; // space for user labels left of W
+  const FACTOR_LABEL_W = 86; // space for factor name labels left of R
+
+  const MAT_Y = TOP_LABEL_H;
+  const W_X = 16 + ROW_LABEL_W;
+  const W_W = N_COLS * CELL_W;
+  const W_H = N_ROWS * CELL_H;
+
+  const APPROX_X = W_X + W_W + 22;
+
+  const MID_W_X = APPROX_X + 48;
+  const MID_W_AT = (k: number) => k * CELL_W;
+
+  const TIMES_X = (k: number) => MID_W_X + MID_W_AT(k) + 18;
+
+  const R_X_AT = (k: number) => TIMES_X(k) + 28 + FACTOR_LABEL_W;
+
+  // ---- Color scale (cool slate for low → warm amber/orange for high; no muddy middle) ----
+  const cellColor = d3
+    .scaleSequential<string>()
+    .domain([0, 10])
+    .interpolator(
+      d3.interpolateRgbBasis([
+        "#1e293b",
+        "#334155",
+        "#64748b",
+        "#fbbf24",
+        "#fb923c",
+      ])
+    );
+
+  // ---- Build SVG ----
+  const svg = d3.select<SVGSVGElement, unknown>("#lr-chart");
+  let showNumbers = false;
+
+  svg
+    .append("text")
+    .attr("x", 380)
+    .attr("y", 22)
+    .attr("fill", "#e5e7eb")
+    .attr("font-size", 18)
+    .attr("font-weight", 700)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+    .text("P ≈ W × R");
+
+  svg
+    .append("text")
+    .attr("x", 380)
+    .attr("y", 50)
+    .attr("fill", "#94a3b8")
+    .attr("font-size", 12)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+    .text("Observed preferences ≈ user mixtures × shared latent reward basis");
+
+  // Operator symbols (positions will be re-placed on k change)
+  const approxText = svg
+    .append("text")
+    .attr("x", APPROX_X + 12)
+    .attr("y", MAT_Y + W_H / 2 + 10)
+    .attr("fill", "#cbd5e1")
+    .attr("font-size", 30)
+    .attr("font-weight", 400)
+    .attr("text-anchor", "middle")
+    .text("≈");
+
+  const timesText = svg
+    .append("text")
+    .attr("x", 0)
+    .attr("y", MAT_Y + W_H / 2 + 10)
+    .attr("fill", "#cbd5e1")
+    .attr("font-size", 30)
+    .attr("font-weight", 400)
+    .attr("text-anchor", "middle")
+    .text("×");
+
+  // Section labels (above each matrix)
+  svg
+    .append("text")
+    .attr("x", W_X + W_W / 2)
+    .attr("y", 76)
+    .attr("fill", "#cfe6f8")
+    .attr("font-size", 14)
+    .attr("font-weight", 700)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
+    .text("P  (user preferences)");
+
+  const midWHeader = svg
+    .append("text")
+    .attr("x", 0)
+    .attr("y", 76)
+    .attr("fill", "#cfe6f8")
+    .attr("font-size", 14)
+    .attr("font-weight", 700)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
+    .text("W  (user weights)");
+
+  const rHeader = svg
+    .append("text")
+    .attr("x", 0)
+    .attr("y", 76)
+    .attr("fill", "#cfe6f8")
+    .attr("font-size", 14)
+    .attr("font-weight", 700)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
+    .text("R  (basis × response features)");
+
+  const rCaveat = svg
+    .append("text")
+    .attr("x", 0)
+    .attr("y", MAT_Y + 84)
+    .attr("fill", "#94a3b8")
+    .attr("font-size", 10.5)
+    .attr("text-anchor", "middle")
+    .attr("font-family", "ui-sans-serif, system-ui, sans-serif");
+
+  rCaveat
+    .append("tspan")
+    .attr("x", 0)
+    .attr("dy", 0)
+    .text("In real models, these bases are learned");
+
+  rCaveat
+    .append("tspan")
+    .attr("x", 0)
+    .attr("dy", 13)
+    .text("and usually unlabeled.");
+
+  // User row labels (left of W)
+  svg
+    .append("g")
+    .attr("class", "lr-user-labels")
+    .selectAll<SVGTextElement, string>("text")
+    .data(USERS)
+    .join("text")
+    .attr("x", W_X - 6)
+    .attr("y", (_d, i) => MAT_Y + i * CELL_H + CELL_H / 2 + 4)
+    .attr("text-anchor", "end")
+    .attr("fill", "#cbd5e1")
+    .attr("font-size", 12)
+    .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+    .text(d => d);
+
+  // Feature column labels (top of W, rotated -30°)
+  svg
+    .append("g")
+    .attr("class", "lr-feature-labels")
+    .selectAll<SVGTextElement, string>("text")
+    .data(FEATURES)
+    .join("text")
+    .attr("transform", (_d, j) => {
+      const x = W_X + j * CELL_W + CELL_W / 2;
+      const y = MAT_Y - 4;
+      return `translate(${x}, ${y}) rotate(-30)`;
+    })
+    .attr("text-anchor", "start")
+    .attr("fill", "#cbd5e1")
+    .attr("font-size", 11)
+    .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+    .text(d => d);
+
+  // P cells (static)
+  type PCell = { row: number; col: number };
+  const pData: PCell[] = [];
+  for (let i = 0; i < N_ROWS; i++)
+    for (let j = 0; j < N_COLS; j++) pData.push({ row: i, col: j });
+
+  svg
+    .append("g")
+    .attr("class", "lr-p-cells")
+    .selectAll<SVGRectElement, PCell>("rect")
+    .data(pData)
+    .join("rect")
+    .attr("class", d => `lr-p-cell lr-user-${d.row}`)
+    .attr("x", d => W_X + d.col * CELL_W + 1)
+    .attr("y", d => MAT_Y + d.row * CELL_H + 1)
+    .attr("width", CELL_W - 2)
+    .attr("height", CELL_H - 2)
+    .attr("rx", 2)
+    .attr("fill", d => cellColor(P[d.row][d.col]));
+
+  svg
+    .append("g")
+    .attr("class", "lr-p-values")
+    .selectAll<SVGTextElement, PCell>("text")
+    .data(pData)
+    .join("text")
+    .attr("class", "lr-number lr-hidden-number")
+    .attr("x", d => W_X + d.col * CELL_W + CELL_W / 2)
+    .attr("y", d => MAT_Y + d.row * CELL_H + CELL_H / 2 + 4)
+    .attr("text-anchor", "middle")
+    .attr("fill", "#f8fafc")
+    .attr("font-size", 11)
+    .attr("font-weight", 600)
+    .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
+    .text(d => P[d.row][d.col].toFixed(1));
+
+  // Containers for dynamic groups (W and R rebuilt on k change)
+  const midWGroup = svg.append("g").attr("class", "lr-mid-w-group");
+  const midWLabelGroup = svg.append("g").attr("class", "lr-mid-w-labels");
+  const rGroup = svg.append("g").attr("class", "lr-r-group");
+  const rFeatureLabelGroup = svg
+    .append("g")
+    .attr("class", "lr-r-feature-labels");
+  const rLabelGroup = svg.append("g").attr("class", "lr-r-labels");
+
+  // ---- DOM refs ----
+  const tabsRoot = document.getElementById("lr-k-tabs")!;
+  const showNumbersEl = document.getElementById(
+    "lr-show-numbers"
+  ) as HTMLInputElement;
+  const varianceEl = document.getElementById("lr-variance")!;
+  const errorEl = document.getElementById("lr-error")!;
+  const storageEl = document.getElementById("lr-storage")!;
+  const captionEl = document.getElementById("lr-caption")!;
+
+  function updateNumberVisibility() {
+    svg
+      .selectAll<SVGTextElement, unknown>(".lr-number")
+      .classed("lr-hidden-number", !showNumbers);
+  }
+
+  function highlightUser(row: number | null) {
+    svg
+      .selectAll<SVGRectElement, unknown>(".lr-p-cell")
+      .classed("lr-highlight", false);
+    if (row !== null) {
+      svg
+        .selectAll<SVGRectElement, unknown>(`.lr-user-${row}`)
+        .classed("lr-highlight", true);
+    }
+  }
+
+  function highlightBasis(col: number | null) {
+    svg
+      .selectAll<SVGRectElement, unknown>(".lr-mid-w-cell rect")
+      .classed("lr-highlight", false);
+    if (col !== null) {
+      svg
+        .selectAll<SVGRectElement, unknown>(`.lr-basis-${col}`)
+        .classed("lr-highlight", true);
+    }
+  }
+
+  type Cell = { row: number; col: number; value: number };
+
+  function setK(k: Mode) {
+    const decomp = DECOMPS[k];
+    const Pk = matmul(decomp.W, decomp.R);
+    const err = frobenius(diff(P, Pk));
+    const errPct = (err / P_FRO) * 100;
+    // Structure captured = 1 - (||P - W_k R_k||² / ||P||²)
+    const exactVariance = 100 * (1 - (err * err) / (P_FRO * P_FRO));
+
+    const storageFull = N_ROWS * N_COLS; // 24
+    const storageLowRank = N_ROWS * k + k * N_COLS; // k*(rows+cols)
+    const storagePct = (storageLowRank / storageFull) * 100;
+
+    // Layout positions for current k
+    const midW = MID_W_AT(k);
+    const timesX = TIMES_X(k);
+    const rX = R_X_AT(k);
+
+    // Move operators
+    const DUR = 500;
+    const ease = d3.easeCubicInOut;
+    approxText
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", APPROX_X + 12);
+    timesText
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", timesX + 12);
+
+    // Headers
+    midWHeader
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", MID_W_X + midW / 2);
+    rHeader
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", rX + (N_COLS * CELL_W) / 2);
+    const rCaveatX = rX + (N_COLS * CELL_W) / 2;
+    rCaveat
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", rCaveatX)
+      .attr("y", MAT_Y + Math.max(k, 2) * CELL_H + 28);
+    rCaveat
+      .selectAll<SVGTSpanElement, unknown>("tspan")
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", rCaveatX);
+
+    const rFeatureLabels = rFeatureLabelGroup
+      .selectAll<SVGTextElement, { name: string; idx: number }>("text")
+      .data(
+        FEATURES.map((name, idx) => ({ name, idx })),
+        d => `${d.idx}-${d.name}`
+      );
+
+    rFeatureLabels
+      .enter()
+      .append("text")
+      .attr("text-anchor", "start")
+      .attr("fill", "#cbd5e1")
+      .attr("font-size", 11)
+      .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+      .style("opacity", 0)
+      .merge(rFeatureLabels)
+      .text(d => d.name)
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("transform", d => {
+        const x = rX + d.idx * CELL_W + CELL_W / 2;
+        const y = MAT_Y - 4;
+        return `translate(${x}, ${y}) rotate(-30)`;
+      })
+      .style("opacity", 1);
+
+    // ---- W cells ----
+    const midWData: Cell[] = [];
+    for (let i = 0; i < N_ROWS; i++)
+      for (let j = 0; j < k; j++)
+        midWData.push({ row: i, col: j, value: decomp.W[i][j] });
+
+    const midWCells = midWGroup
+      .selectAll<SVGGElement, Cell>("g.lr-mid-w-cell")
+      .data(midWData, (d: Cell) => `${d.row}-${d.col}`);
+
+    midWCells
+      .exit()
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .style("opacity", 0)
+      .remove();
+
+    const midWEnter = midWCells
+      .enter()
+      .append("g")
+      .attr("class", "lr-mid-w-cell")
+      .style("opacity", 0);
+
+    midWEnter
+      .append("rect")
+      .attr("rx", 2)
+      .attr("width", CELL_W - 2)
+      .attr("height", CELL_H - 2);
+
+    midWEnter
+      .append("text")
+      .attr("class", "lr-number")
+      .attr("text-anchor", "middle")
+      .attr("fill", "#f8fafc")
+      .attr("font-size", 11)
+      .attr("font-weight", 600)
+      .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace");
+
+    const midWMerged = midWEnter.merge(
+      midWCells as d3.Selection<SVGGElement, Cell, SVGGElement, unknown>
+    );
+
+    midWMerged
+      .on("mouseenter", (_event, d) => highlightUser(d.row))
+      .on("mouseleave", () => highlightUser(null))
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .style("opacity", 1);
+
+    midWMerged
+      .select<SVGRectElement>("rect")
+      .attr("class", d => `lr-basis-${d.col}`)
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", d => MID_W_X + d.col * CELL_W + 1)
+      .attr("y", d => MAT_Y + d.row * CELL_H + 1)
+      .attr("fill", d => cellColor(d.value * 9));
+
+    midWMerged
+      .select<SVGTextElement>("text")
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", d => MID_W_X + d.col * CELL_W + CELL_W / 2)
+      .attr("y", d => MAT_Y + d.row * CELL_H + CELL_H / 2 + 4)
+      .text(d => d.value.toFixed(2));
+
+    // ---- W factor labels (rotated, on top of W columns) ----
+    const midWLabels = midWLabelGroup
+      .selectAll<SVGTextElement, { name: string; idx: number }>("text")
+      .data(
+        decomp.factorNames.map((name, idx) => ({ name, idx })),
+        d => `${d.idx}-${d.name}`
+      );
+
+    midWLabels
+      .exit()
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .style("opacity", 0)
+      .remove();
+
+    midWLabels
+      .enter()
+      .append("text")
+      .attr("text-anchor", "start")
+      .attr("fill", "#fb923c")
+      .attr("font-size", 12)
+      .attr("font-weight", 600)
+      .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+      .style("opacity", 0)
+      .merge(midWLabels)
+      .text(d => d.name)
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("transform", d => {
+        const x = MID_W_X + d.idx * CELL_W + CELL_W / 2;
+        const y = MAT_Y - 4;
+        return `translate(${x}, ${y}) rotate(-30)`;
+      })
+      .style("opacity", 1);
+
+    // ---- R cells ----
+    const rData: Cell[] = [];
+    for (let i = 0; i < k; i++)
+      for (let j = 0; j < N_COLS; j++)
+        rData.push({ row: i, col: j, value: decomp.R[i][j] });
+
+    const rCells = rGroup
+      .selectAll<SVGGElement, Cell>("g.lr-r-cell")
+      .data(rData, (d: Cell) => `${d.row}-${d.col}`);
+
+    rCells
+      .exit()
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .style("opacity", 0)
+      .remove();
+
+    const rEnter = rCells
+      .enter()
+      .append("g")
+      .attr("class", "lr-r-cell")
+      .style("opacity", 0);
+
+    rEnter
+      .append("rect")
+      .attr("rx", 2)
+      .attr("width", CELL_W - 2)
+      .attr("height", CELL_H - 2);
+
+    rEnter
+      .append("text")
+      .attr("class", "lr-number")
+      .attr("text-anchor", "middle")
+      .attr("fill", "#f8fafc")
+      .attr("font-size", 11)
+      .attr("font-weight", 600)
+      .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace");
+
+    const rMerged = rEnter.merge(
+      rCells as d3.Selection<SVGGElement, Cell, SVGGElement, unknown>
+    );
+
+    rMerged
+      .on("mouseenter", (_event, d) => highlightBasis(d.row))
+      .on("mouseleave", () => highlightBasis(null))
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .style("opacity", 1);
+
+    rMerged
+      .select<SVGRectElement>("rect")
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", d => rX + d.col * CELL_W + 1)
+      .attr("y", d => MAT_Y + d.row * CELL_H + 1)
+      .attr("fill", d => cellColor(d.value));
+
+    rMerged
+      .select<SVGTextElement>("text")
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", d => rX + d.col * CELL_W + CELL_W / 2)
+      .attr("y", d => MAT_Y + d.row * CELL_H + CELL_H / 2 + 4)
+      .text(d =>
+        Number.isInteger(d.value) ? String(d.value) : d.value.toFixed(1)
+      );
+
+    // ---- R factor labels (horizontal, left of R rows) ----
+    const rLabels = rLabelGroup
+      .selectAll<SVGTextElement, { name: string; idx: number }>("text")
+      .data(
+        decomp.factorNames.map((name, idx) => ({ name, idx })),
+        d => `${d.idx}-${d.name}`
+      );
+
+    rLabels
+      .exit()
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .style("opacity", 0)
+      .remove();
+
+    rLabels
+      .enter()
+      .append("text")
+      .attr("text-anchor", "end")
+      .attr("fill", "#fb923c")
+      .attr("font-size", 12)
+      .attr("font-weight", 600)
+      .attr("font-family", "ui-sans-serif, system-ui, sans-serif")
+      .style("opacity", 0)
+      .merge(rLabels)
+      .text(d => d.name)
+      .transition("lr")
+      .duration(DUR)
+      .ease(ease)
+      .attr("x", rX - 6)
+      .attr("y", d => MAT_Y + d.idx * CELL_H + CELL_H / 2 + 4)
+      .style("opacity", 1);
+
+    // ---- Stats + caption ----
+    errorEl.textContent = `${errPct.toFixed(1)}%`;
+    varianceEl.textContent = `${exactVariance.toFixed(1)}%`;
+    storageEl.textContent = `${storageLowRank} of ${storageFull} (${storagePct.toFixed(0)}%)`;
+    updateNumberVisibility();
+
+    tabsRoot.querySelectorAll<HTMLButtonElement>(".lr-tab").forEach(b => {
+      b.classList.toggle("lr-tab-active", b.dataset.k === String(k));
+    });
+  }
+
+  tabsRoot.querySelectorAll<HTMLButtonElement>(".lr-tab").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const k = parseInt(btn.dataset.k ?? "2", 10) as Mode;
+      setK(k);
+    });
+  });
+
+  showNumbersEl.addEventListener("change", () => {
+    showNumbers = showNumbersEl.checked;
+    updateNumberVisibility();
+  });
+
+  setK(2);
+</script>

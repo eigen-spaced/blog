@@ -1,0 +1,267 @@
+---
+pubDatetime: 2026-05-22
+title: Decoding Low Rank Hidden Values with LoRE
+slug: decoding-low-rank-hidden-values
+description: A look into the LoRe paper and thoughts
+tags:
+  - interpretability
+---
+
+import SuperpositionToyModel from "@/components/posts/LoRe/SuperpositionToyModel.astro";
+import LowRankDecomposition from "@/components/posts/LoRe/LowRankDecomposition.astro";
+
+## Table of contents
+
+Modern neural networks do not understand language symbolically. Instead, they transform text into high-dimensional internal representations known as **latent spaces**. In these spaces, concepts are represented geometrically as patterns and directions. Similar ideas tend to cluster together, allowing the model to build internal representations of the world through relationships rather than relying on fixed human defined categories.
+
+Reward models inherit and further specialise this latent structure towards human preferences and evaluation. Instead of representing only linguistic meaning, reward representations become shaped around qualities humans tend to reward, such as helpfulness, reasoning style, emotional tone, confidence, conversational fluency etc. Responses are therefore embedded not only within semantic space, but within preference-oriented latent geometry.
+
+However, human preference itself is not one-dimensional. Different users often value entirely different response characteristics. One user may prefer concise analytical answer, while another may value exploratory reasoning, emotional warmth, or conversational depth. Traditional RLHF systems typically compress these diverse preferences into a single global reward function, producing that models that generalise broadly across diverse populations but may fail to strongly satisfy any particular individual preference profile.
+
+This create the central personalisation problem: how can a reward model adapt to diverse human preferences without training an entirely separate reward system for every user? 
+
+LoRe approaches this problem by assuming that much of human preference variation is not arbitrary, but compressible into smaller set of shared latent reward dimensions.
+
+# What is LoRe?
+
+Instead of assuming human preference is entirely arbitrary, LoRe relies on a foundational belief that human values contain massive amounts of hidden redundancy.
+
+If you ask thousands of individuals to score different AI responses, you won't get thousands of completely unique, independent reward profiles. Instead, you will see distinct clusters of behavior. Rather than trying to learn an entirely separate, massive reward function for every single user, we can leverage this redundancy to compress a high-dimensional preference space into a compact, shared set of latent reward bases (underlying preference directions like "helpfulness" or "concise").
+
+In linear algebra, this strategy is known as a low-rank approximation. We can mathematically approximate this compression as:
+
+$$
+P \approx W R
+$$
+
+where:
+
+- $P$ represents the full preference matrix we want to model
+- $W$ represents user-specific preference weights
+- $R$ represents the shared latent reward basis
+
+We can think of this intuitively using a raw preference matrix $P$ for three users evaluating three different AI responses:
+
+
+| User  | Response 1 | Response 2 | Response 3 |
+| ----- | ---------- | ---------- | ---------- |
+| Alice | 9          | 2          | 8          |
+| Bob   | 8          | 1          | 7          |
+| Carol | 2          | 9          | 1          |
+
+
+An obvious pattern immediately emerges: Alice and Bob exhibit nearly identical preference profiles, while Carol prefers the exact opposite traits.
+
+Because Alice and Bob's data points look so much alike, this $3 \times 3$ matrix doesn't actually contain 9 items of unique information. Its true mathematical variation can be almost entirely explained by just two distinct preference directions.
+
+By identifying these shared structures and factorizing $P$ into $W$ and $R$, LoRe eliminates the need to build bespoke reward models for every individual. It scales personalization efficiently by simply mapping where a new user falls along a small, universally shared set of coordinate axes.
+
+## Low-rank decomposition
+
+The visual below illustrates exactly how this low-rank matrix decomposition functions under the hood. Imagine we have a matrix $P$ representing the observed preferences of six users (Alice through Frank) across four response features (like text length or formality).
+
+<div class="not-prose">
+  <LowRankDecomposition />
+</div>
+
+Notice the inherent redundancy: Alice and Bob have remarkably similar preferences, as do Carol and Dave. This visual pattern is our clue that the matrix doesn't actually contain $6 \times 4$ pieces of completely unique information. Instead, it can be broken down into a handful of underlying, hidden trends:
+
+- $W$ tells us how much a specific user cares about each hidden theme. For instance, Alice might load heavily onto an "Analytical" trait, while Carol loads onto an "Expressive" one.
+- $R$ defines what those hidden themes actually mean by mapping them back to the original response features.
+
+By multiplying a user's specific weights ($W$) with this shared foundation ($R$), we can closely reconstruct our original preference data ($P \approx WR$). This compression is the core mathematical engine behind LoRe.
+
+To truly understand how compression forces tradeoffs, use the interactive controls above the visual to manipulate the matrix decomposition in real time to change the rank of the decomposition, altering the many hidden directions the model is allowed to keep.
+
+- Setting $k = 1$ forces extreme compression. The model tries to explain every single user with just one generic trend, leading to a high *Reconstruction Error*.
+- Setting $k = 2$ hits the mathematical sweet spot for this specific data, capturing almost 100% of the underlying structure by perfectly separating the two distinct user groups.
+- Setting $k = 3$ or higher over-allocates capacity, meaning we are storing more data parameters than there is actual unique information in the system.
+
+
+## Preference modelling and Bradley-Terry
+
+Now that we have a conceptual grasp of how to decompose preferences into low-rank matrices, we need a way to actually train our model using this framework. In machine learning, this requires converting raw pairwise data like "User *i* prefers response *A* over response *B*" into a differentiable optimisation objective.
+The standard foundation for this across modern RLHF pipelines is the Bradley-Terry (BT) model. In its class form, the BT model estimates the probability that a user or judge will prefer response $y_c$ (preferred response) over $y_r$ (rejected response) based on their intrinsic scores $s$:
+
+$$
+P(y_c > y_r) = \frac{s(y_c)}{s(y_c) + s(y_r)}
+$$
+
+>Note: a while ago, I had created a fun little experiment to do pair-wise ranking on different unrelated concepts, comparing 'Wet socks' and an 'Electric Drill', or 'Immortality' and 'Keanu Reeves'. The data is still sparse, so you can help by furthering the ranking info: https://seemingly-random.vercel.app/start-ranking
+
+While this equation is incredibly elegant, looking back at our multi-user preference matrix reveals a problem - standard implementations of the Bradley-Terry model assume a single, universal scoring function $s(y)$ that reflects one flattened definition of human preference. But in the example with Alice, Bob, Carol etc., human preferences are not a monolith. If we try to plug our multi-user reality into the standard BT equation, the model is forced to average everyone's tastes together, destroying the exact personalization we are trying to achieve. To keep the classic framework intact while respecting user diversity, we would be forced to train completely separate scoring models for every single individual—shattering the efficiency of our low-rank assumption.
+
+To transform the Bradley-Terry ratio into an objective neural networks can optimise, we parameterise the raw score in log-space by setting $s(y) = e^{r_y}$, where $r_y$ represents the scalar reward outputted by the model. This trick is incredibly useful because exponentials are guaranteed to be strictly positive ($e^z > 0$), perfectly matching the mathematical constraints of the classic BT model.
+
+Substituting $e^{r_c}$ and $e^{r_r}$ into the Bradley-Terry formula gives us:
+
+$$
+P(y_c \succ y_r) = \frac{e^{r_c}}{e^{r_c} + e^{r_r}}
+$$
+
+To simplify this fraction into a standard machine learning loss function, we divide both the numerator and the denominator by $e^{r_c}$:
+
+$$
+P(y_c \succ y_r) = \frac{1}{1 + \frac{e^{r_r}}{e^{r_c}}}
+$$
+
+Using basic exponent rules ($\frac{e^A}{e^B} = e^{A-B}$), we can collapse the fraction in the denominator:
+
+$$
+P(y_c \succ y_r) = \frac{1}{1 + e^{r_r - r_c}}
+$$
+
+Next, we factor out a negative sign from the exponent to reveal the difference in rewards:
+
+$$
+P(y_c \succ y_r) = \frac{1}{1 + e^{-(r_c - r_r)}}
+$$
+
+Notice that this expression perfectly mirrors the algebraic definition of the standard Sigmoid function, $\sigma(z) = \frac{1}{1 + e^{-z}}$. This allows us to cleanly rewrite the preference probability as:
+
+$$
+P(y_c \succ y_r) = \sigma(r_c - r_r)
+$$
+
+When accounting for a specific prompt context ($x$), literature typically writes this baseline RLHF objective as:
+
+$$
+P(y_c \succ y_r \mid x) = \sigma\left( r(x,y_c) - r(x,y_r) \right)
+$$
+
+Now we can seamlessly inject the low-rank personalisation framework we established earlier.
+
+Instead of letting the model output a single, universal scalar reward ($r$), LoRe modifies the architecture to output a shared matrix/vector of multiple latent reward attributes, $R(x, y)$. To compute the personalised reward $r_i$ for an individual user $i$, we take the dot product of their unique preference weight vector ($w_i$) and that shared reward basis:
+
+$$
+r_i(x,y) = w_i^\top R(x,y)
+$$
+
+Substituting this personalised reward function back into our freshly derived sigmoid preference formula yields:
+
+$$
+P_i(y_c \succ y_r \mid x) = \sigma\left( w_i^\top R(x,y_c) - w_i^\top R(x,y_r) \right)
+$$
+
+By factoring out the shared user weights ($w_i^\top$), we arrive at the core trainable framework for LoRe:
+
+$$
+P_i(y_c \succ y_r \mid x) = \sigma\left( w_i^\top \left[ R(x,y_c) - R(x,y_r) \right] \right)
+$$
+
+This final form unlocks the best of both worlds. Rather than optimizing for a single, flattened definition of "goodness", the model learns a rich, multi-dimensional **reward basis**, while each user vector ($w_i$) serves as a custom dial—weighting those underlying bases differently to match their unique preferences without changing the core model parameters.
+
+# Flying blind in a Low-Rank world
+
+By framing preference learning as a low-rank matrix factorisation ($P \approx W R$), LoRe hands us a powerful mathematical gift: a compressed, structured view of human values. We can successfully distill a messy, high-dimensional space of user interactions into a crisp set of latent reward bases.
+
+But this is also where the mathematical elegance has a painful caveat. Extracting a set of latent bases is not the same thing as understanding them. While the decomposition guarantees that these dimensions are mathematically optimal for reconstructing preferences, it provides absolutely no guarantee that they will align with human concepts.
+If we were to inspect a single latent reward dimension, we won't neatly find "Dimension 4 = Warmth" or "Dimension 12 = Political Bias." Instead, we are far more likely to find a mathematical abstraction - a direction in the latent space that vaguely correlates with a dozen disparate traits all at once. We have successfully decomposed the preference matrix, but we are still flying blind. The bases themselves remain a black box.
+
+## The Reality of Latent Mixtures
+
+Why does this happen? Because the underlying reward features are not orthogonal in how they manifest. A single basis vector is rarely a "pure" concept; it is almost always a complex mixture.
+
+For instance, a single learned basis might simultaneously capture elements of text length, factual accuracy, and a specific conversational tone. If we try to isolate and tweak this basis to make a model more concise, we risk inadvertently degrading its factual precision. This mixing makes direct intervention or auditing practically impossible because the levers we are pulling are fundamentally entangled.
+
+## The Superposition Problem
+
+The root cause of this entanglement is a phenomenon known as **superposition** (Elhage et al., 2022).
+
+Models are incentivised to learn far more concepts than they have physical dimensions to store. To pack this information tightly, the model relies on the fact that not all concepts are active at the same time, utilizing almost-orthogonal directions in a high-dimensional space to force multiple independent concepts to share the same latent dimensions. 
+
+The visual below encapsulates this mechanic within a simplified two-dimensional ($d = 2$) latent space. In a "Clean Capacity" scenario, the model would map distinct reward concepts to completely orthogonal axes. However, once capacity is overloaded, those features are forced into superposition. As you can see in the "Superposition" visual, concepts like *Helpful*, *Honest*, and *Safe* begin crowding into the exact same directional path—interfering with one another and blurring into dense, overlapping mixtures that are impossible to inspect or control individually.
+
+<div class="not-prose">
+  <SuperpositionToyModel />
+</div>
+
+While superposition is a brilliant compression strategy for the model, it becomes nightmare for interpretability. It means our cleanly factorised matrices $W$ and $R$ are actually dense, overlapping thickets of heavily compressed data.
+
+## The Audit and Control Risk
+
+This interpretability gap introduces severe risks for safety and alignment:
+
+- If we cannot explicitly label what a latent basis represents, we cannot audit the model for hidden vulnerabilities. A basis could be implicitly capturing harmful biases or deceptive sycophancy, completely hidden beneath the surface of a seemingly benign mathematical mixture. This is the **audit risk**.
+
+- Safety requires precise control. If we want to steer a model away from harmful behaviors, we need a surgical scalpel. Because superposition glues safe and unsafe concepts together in the same latent dimensions, any attempt to damp down an undesirable trait acts as a sledgehammer, inadvertently breaking crucial, unrelated capabilities. This is the **control risk**.
+
+If we want to use LoRe for true safety and steering, we cannot stop at basic matrix decomposition. We need a way to untangle this low-rank world and project it into a space where features actually make sense to humans.
+
+# The Bridge: ArmoRM and the Vision of Transparency
+
+To understand how we fix the messiness of superposition, it helps to look at **Absolute-Rating Multi-Objective Reward Model (ArmoRM)** (Wang et al.), a model that took a fundamentally different path toward transparency.
+
+If low-rank reward models leave us guessing what’s happening under the hood, ArmoRM represents the "interpretable alternative." Instead of forcing a neural network to invent its own abstract, compressed latent dimensions, ArmoRM is designed around a collection of explicitly labeled experts—each dedicated to a specific, human-understandable attribute like "Helpfulness," "Truthfulness," or "Verbosity."
+
+Think of it as a control panel with clearly labeled buttons.
+
+## The Gold Standard of Interpretability
+
+This architectural choice provides a glimpse of the gold standard for AI safety: **total decision provenance**.
+
+When ArmoRM evaluates a model's response and outputs a final reward score, it doesn't just hand over an opaque number. It reveals the exact recipe. We can look at the dashboard and see precisely how much the "Helpfulness" expert approved of the response versus how heavily the "Verbosity" expert penalised it for being too wordy.
+
+Knowing exactly which part of a model is driving a decision means we are no longer guessing. If a model behaves unexpectedly, we can trace the failure directly back to a specific, human-labeled component, making debugging and auditing an intentional science rather than a game of mathematical detective work.
+
+But while ArmoRM’s predefined, hand-labeled approach gives us pristine clarity, it also requires us to know exactly what we want to measure ahead of time. What happens when we want that same level of "labeled button" clarity inside the raw, unconstrained mathematical power of a low-rank world?
+
+To get the best of both worlds, we need a different kind of tool—a way to retroactively install those labeled buttons onto a model that has already scrambled its concepts.
+
+# The Interpretability Toolbox
+
+If low-rank matrix decomposition reveals the raw mathematical terrain of our reward models, we still need the right instruments to navigate it. We cannot blindly steer an AI using entangled, polysemantic dimensions.
+
+Fortunately, mechanistic interpretability and architectural design have provided us with a diagnostic toolkit. These tools allow us to peek inside the black box, un-mix the superimposed signals, and map compressed vectors back into clean, human concepts. They are not perfect in the absolute sense, but they are good enough.
+
+## Sparse Autoencoders (SAEs)
+
+To untangle a dense thicket of overlapping data, we use a tool called a **Sparse Autoencoder (SAE)**.
+
+Instead of treating the low-rank latent dimensions as monolithic codes, SAE acts like a mathematical prism. It projects the model's dense internal activations into a much higher-dimensional space, forcing the representations to be *sparse*—meaning only a few concepts are allowed to "fire" at any given time.
+
+The breakthrough here is that it effectively reverses superposition. By expanding the space and enforcing sparsity, it separates the tangled mixtures into individual, **monosemantic** (single-meaning) directions. Instead of an uninterpretable metric like "Vector #4," the SAE isolates clean, distinct features like a "Brevity Feature," a "Sarcasm Feature," or a "Sycophancy Feature."
+
+* **For further reading on SAEs:** See the foundational work on scaling dictionary learning by Anthropic in their really comprehensive paper [Towards Monosemanticity](https://transformer-circuits.pub/2023/monosemantic-features/index.html) paper and OpenAI's work on [Sparse Autoencoders for Language Models](https://arxiv.org/abs/2406.04093).
+
+## Sparse Autoencoder-Enhanced Reward Models (SARM)
+
+Applying SAEs directly to preference learning brings us to **SARM** (Sparse Autoencoder-Enhanced Reward Model).
+
+SARM integrates a pretrained SAE directly into the layers of a reward model. Instead of allowing the value head to compute rewards from a messy, low-rank soup of activations, SARM forces the hidden states through the SAE first. The model's final scalar reward is then computed by aggregating these more disentangled features.
+
+![SARM](@/assets/blog-images/sarm.png)
+
+SARM changes the game for safety by introducing direct attribution. If a reward model gives a response an unusually high or low score, we can look at the exact weights of the value head to see which interpretable features contributed to that score. Furthermore, it gives us surgical control: if we notice the model is rewarding subtle forms of bias, we can dynamically adjust or penalise the weight of that specific SAE, feature potentially allowing more targeted interventions.
+
+* **You can learn more about this from the paper:** [Interpretable Reward Model via Sparse Autoencoder (SARM)](https://arxiv.org/abs/2508.08746)
+
+## Concept Bottleneck Reward Models (CB-RM)
+
+While SARM retroactively extracts features from a trained model using an SAE, CB-RM bake interpretability directly into the training pipeline from day one.
+
+A CB-RM constructs a deliberate architectural "bottleneck" that forces the model to explain itself in human terms *before* it can issue a reward score. When evaluating a response, the model must first predict a series of pre-defined, human-interpretable concepts (e.g., *Is this factual? Is this toxic? Is this response too repetitive?*). The final reward is strictly calculated as a function of these intermediate concept predictions.
+
+### The Safety Payload: Intentional Auditing
+
+Because the bottleneck is explicit, a CB-RM provides a built-in audit trail. If a system misbehaves during alignment, safety teams don't need to guess which latent basis failed. They can look directly at the concept bottleneck layer to verify if the model miscalculated a specific human value, turning preference learning into an auditable, rule-bound process.
+
+* **Read the paper:** [Interpretable Reward Modeling with Active Concept Bottlenecks (CB-RM)]()
+
+By deploying tools like SAEs, SARM, and CB-RMs, we bridge the gap between raw mathematical efficiency and human oversight. We no longer have to choose between the high performance of low-rank models and the strict transparency required for AI safety; we can finally see exactly where our reward signals are pointing.
+
+# References
+
+1. Bose, A., Xiong, Z., Chi, Y., *et al.* "LoRe: Personalizing LLMs via Low-Rank Reward Modeling", arXiv 2025. [https://arxiv.org/abs/2504.14439](https://arxiv.org/abs/2504.14439)
+
+2. Elhage, N., Hume, T., Olsson, C., *et al.* "Toy Models of Superposition", arXiv 2022. [https://arxiv.org/abs/2209.10652](https://arxiv.org/abs/2209.10652)
+
+3. Wang, H., Xiong, W., Xie, T., *et al.* "Interpretable Preferences via Multi-Objective Reward Modeling and Mixture-of-Experts", arXiv 2024. [https://arxiv.org/abs/2406.12845](https://arxiv.org/abs/2406.12845)
+
+4. Bricken, T., Templeton, A., Simpson, J., *et al.* "Towards Monosemanticity: Analyzing Superposition in Image Models / Language Models", Anthropic Transformer Circuits Thread 2023. [https://transformer-circuits.pub/2023/monosemantic-features/index.html](https://transformer-circuits.pub/2023/monosemantic-features/index.html)
+
+5. Templeton, A., Conerly, T., Marcus, J., *et al.* "Scaling and Evaluating Sparse Autoencoders", arXiv 2024. [https://arxiv.org/abs/2406.04093](https://arxiv.org/abs/2406.04093)
+
+6. Lin, X., Zhang, Y., Wu, H., *et al.* "Interpretable Reward Model via Sparse Autoencoder (SARM)", arXiv 2025. [https://arxiv.org/abs/2508.08746](https://arxiv.org/abs/2508.08746)
+
+8. Zhao, L., Kumar, A., Gu, Q., *et al.* "Interpretable Reward Modeling with Active Concept Bottlenecks (CB-RM)", arXiv 2025. [https://arxiv.org/abs/2507.04695](https://arxiv.org/abs/2507.04695)
