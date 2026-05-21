@@ -190,7 +190,7 @@ If we want to use LoRe for true safety and steering, we cannot stop at basic mat
 
 # The Bridge: ArmoRM and the Vision of Transparency
 
-To understand how we fix the messiness of superposition, it helps to look at **Absolute-Rating Multi-Objective Reward Model (ArmoRM)** (Wang et al.), a model that took a fundamentally different path toward transparency.
+To understand how we fix the messiness of superposition, it helps to look at **Absolute-Rating Multi-Objective Reward Model (ArmoRM)** (Wang et al., 2024), a model that took a fundamentally different path toward transparency.
 
 If low-rank reward models leave us guessing what’s happening under the hood, ArmoRM represents the "interpretable alternative." Instead of forcing a neural network to invent its own abstract, compressed latent dimensions, ArmoRM is designed around a collection of explicitly labeled experts—each dedicated to a specific, human-understandable attribute like "Helpfulness," "Truthfulness," or "Verbosity."
 
@@ -220,7 +220,7 @@ To untangle a dense thicket of overlapping data, we use a tool called a **Sparse
 
 Instead of treating the low-rank latent dimensions as monolithic codes, SAE acts like a mathematical prism. It projects the model's dense internal activations into a much higher-dimensional space, forcing the representations to be *sparse*—meaning only a few concepts are allowed to "fire" at any given time.
 
-The breakthrough here is that it effectively reverses superposition. By expanding the space and enforcing sparsity, it separates the tangled mixtures into individual, **monosemantic** (single-meaning) directions. Instead of an uninterpretable metric like "Vector #4," the SAE isolates clean, distinct features like a "Brevity Feature," a "Sarcasm Feature," or a "Sycophancy Feature."
+The breakthrough here is that it effectively reverses superposition. By expanding the space and enforcing sparsity, it separates the tangled mixtures into individual, **monosemantic** (single-meaning) directions. Instead of an uninterpretable metric like "Vector #4," the SAE isolates manageable, distinct features like a "Brevity Feature," a "Sarcasm Feature," or a "Sycophancy Feature."
 
 * **For further reading on SAEs:** See the foundational work on scaling dictionary learning by Anthropic in their really comprehensive paper [Towards Monosemanticity](https://transformer-circuits.pub/2023/monosemantic-features/index.html) paper and OpenAI's work on [Sparse Autoencoders for Language Models](https://arxiv.org/abs/2406.04093).
 
@@ -241,8 +241,6 @@ SARM changes the game for safety by introducing direct attribution. If a reward 
 While SARM retroactively extracts features from a trained model using an SAE, CB-RM bake interpretability directly into the training pipeline from day one.
 
 A CB-RM constructs a deliberate architectural "bottleneck" that forces the model to explain itself in human terms *before* it can issue a reward score. When evaluating a response, the model must first predict a series of pre-defined, human-interpretable concepts (e.g., *Is this factual? Is this toxic? Is this response too repetitive?*). The final reward is strictly calculated as a function of these intermediate concept predictions.
-
-### The Safety Payload: Intentional Auditing
 
 Because the bottleneck is explicit, a CB-RM provides a built-in audit trail. If a system misbehaves during alignment, safety teams don't need to guess which latent basis failed. They can look directly at the concept bottleneck layer to verify if the model miscalculated a specific human value, turning preference learning into an auditable, rule-bound process.
 
