@@ -234,7 +234,7 @@ SARM integrates a pretrained SAE directly into the layers of a reward model. Ins
 
 SARM changes the game for safety by introducing direct attribution. If a reward model gives a response an unusually high or low score, we can look at the exact weights of the value head to see which interpretable features contributed to that score. Furthermore, it gives us surgical control: if we notice the model is rewarding subtle forms of bias, we can dynamically adjust or penalise the weight of that specific SAE, feature potentially allowing more targeted interventions.
 
-* **You can learn more about this from the paper:** [Interpretable Reward Model via Sparse Autoencoder (SARM)](https://arxiv.org/abs/2508.08746)
+* **Read more about it:** [Interpretable Reward Model via Sparse Autoencoder (SARM)](https://arxiv.org/abs/2508.08746)
 
 ## Concept Bottleneck Reward Models (CB-RM)
 
@@ -244,7 +244,7 @@ A CB-RM constructs a deliberate architectural "bottleneck" that forces the model
 
 Because the bottleneck is explicit, a CB-RM provides a built-in audit trail. If a system misbehaves during alignment, safety teams don't need to guess which latent basis failed. They can look directly at the concept bottleneck layer to verify if the model miscalculated a specific human value, turning preference learning into an auditable, rule-bound process.
 
-* **Read the paper:** [Interpretable Reward Modeling with Active Concept Bottlenecks (CB-RM)]()
+* **Read more about it:** [Interpretable Reward Modeling with Active Concept Bottlenecks (CB-RM)](https://arxiv.org/abs/2507.04695)
 
 By deploying tools like SAEs, SARM, and CB-RMs, we bridge the gap between raw mathematical efficiency and human oversight. We no longer have to choose between the high performance of low-rank models and the strict transparency required for AI safety; we can finally see exactly where our reward signals are pointing.
 
