@@ -3,7 +3,7 @@
 ---
 
 <section
-  class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5 font-sans text-gray-100"
+  class="st-root mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5 font-sans text-gray-100"
 >
   <div class="st-controls">
     <span class="st-controls-label">Capacity mode:</span>
@@ -51,32 +51,10 @@
       <span class="st-stat-value" id="st-interference">0%</span>
     </div>
   </div>
-
-  <div class="st-explain">
-    <p class="st-caption">
-      Multiple reward concepts now partially share the same latent directions.
-      The model can still use them, but they are no longer independently
-      inspectable.
-    </p>
-    <p class="st-note">
-      This is why LoRe’s latent reward bases are not automatically
-      interpretable: decomposition gives us bases, but superposition means those
-      bases may still be mixtures.
-    </p>
-  </div>
 </section>
 
 <style is:global>
-  .st-controls,
-  .st-chart-shell,
-  .st-stats,
-  .st-caption,
-  .st-note,
-  .st-mode-summary,
-  .st-mode-title,
-  .st-mode-copy,
-  .st-visual-grid,
-  .st-tooltip {
+  .st-root {
     --st-bg-secondary: rgba(255, 255, 255, 0.04);
     --st-text-primary: #e5e7eb;
     --st-text-secondary: #9ca3af;
@@ -235,24 +213,8 @@
     gap: 10px;
   }
 
-  .st-caption,
-  .st-note {
-    margin: 0;
-    padding: 14px 18px;
-    background: var(--st-bg-secondary);
-    border: 1px solid var(--st-border-soft);
-    border-radius: 6px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--st-text-primary);
-  }
-
   .st-caption {
     border-left: 3px solid var(--st-info-color);
-  }
-
-  .st-note {
-    color: #cbd5e1;
   }
 
   @media (max-width: 760px) {
@@ -278,15 +240,11 @@
   type Concept = {
     id: string;
     label: string;
-    short: string;
     color: string;
     clusterId: number;
-    cleanAngle: number;
-    cleanRadius: number;
-    superAngle: number;
-    superRadius: number;
-    cleanLabelDx: number;
-    cleanLabelDy: number;
+    // Super-mode position is a small offset from the cluster's center.
+    superAngleOffset: number;
+    superRadiusOffset: number;
     superLabelDx: number;
     superLabelDy: number;
   };
@@ -300,149 +258,148 @@
     leaderOpacity: number;
   };
 
-  type ClusterInfo = {
+  type Cluster = {
     id: string;
     label: string;
     angle: number;
     radius: number;
-    width: number;
     color: string;
     opacity: number;
     tooltip: string;
   };
 
+  type CleanPos = {
+    angle: number;
+    radius: number;
+    labelDx: number;
+    labelDy: number;
+  };
+
+  type ClusterInfo = Cluster & { width: number };
+
+  const CLUSTERS: Cluster[] = [
+    {
+      id: "cluster0",
+      label: "Helpful / Honest / Safe",
+      angle: -0.885,
+      radius: 162,
+      color: "#60a5fa",
+      opacity: 0.22,
+      tooltip:
+        "<strong>Shared direction encodes:</strong>Helpful: 42%<br>Honest: 31%<br>Safe: 27%",
+    },
+    {
+      id: "cluster1",
+      label: "Warm / Agreeable / Polite",
+      angle: 0.515,
+      radius: 170,
+      color: "#f472b6",
+      opacity: 0.2,
+      tooltip:
+        "<strong>Shared direction encodes:</strong>Warm: 38%<br>Agreeable: 34%<br>Polite: 28%",
+    },
+    {
+      id: "cluster2",
+      label: "Concise / Confident",
+      angle: 2.44,
+      radius: 156,
+      color: "#a3e635",
+      opacity: 0.18,
+      tooltip:
+        "<strong>Shared direction encodes:</strong>Concise: 56%<br>Confident: 44%",
+    },
+  ];
+
   const CONCEPTS: Concept[] = [
     {
       id: "helpful",
       label: "Helpful",
-      short: "Help",
       color: "#58b7ff",
       clusterId: 0,
-      cleanAngle: -1.48,
-      cleanRadius: 166,
-      superAngle: -0.92,
-      superRadius: 158,
-      cleanLabelDx: 18,
-      cleanLabelDy: -12,
+      superAngleOffset: -0.035,
+      superRadiusOffset: -4,
       superLabelDx: 12,
       superLabelDy: -16,
     },
     {
       id: "honest",
       label: "Honest",
-      short: "Hon",
       color: "#39d3b0",
       clusterId: 0,
-      cleanAngle: 0.14,
-      cleanRadius: 162,
-      superAngle: -0.885,
-      superRadius: 165,
-      cleanLabelDx: 16,
-      cleanLabelDy: -2,
+      superAngleOffset: 0,
+      superRadiusOffset: 3,
       superLabelDx: 10,
-      superLabelDy: -4,
+      superLabelDy: +2,
     },
     {
       id: "safe",
       label: "Safe",
-      short: "Safe",
       color: "#f7b34d",
       clusterId: 0,
-      cleanAngle: 0.18,
-      cleanRadius: 158,
-      superAngle: -0.845,
-      superRadius: 152,
-      cleanLabelDx: 16,
-      cleanLabelDy: 12,
+      superAngleOffset: 0.04,
+      superRadiusOffset: -10,
       superLabelDx: 12,
       superLabelDy: 12,
     },
     {
       id: "polite",
       label: "Polite",
-      short: "Pol",
       color: "#fb7185",
       clusterId: 1,
-      cleanAngle: 0.24,
-      cleanRadius: 156,
-      superAngle: 0.47,
-      superRadius: 162,
-      cleanLabelDx: 16,
-      cleanLabelDy: 8,
+      superAngleOffset: -0.045,
+      superRadiusOffset: -8,
       superLabelDx: 12,
       superLabelDy: -12,
     },
     {
       id: "warm",
       label: "Warm",
-      short: "Warm",
       color: "#c084fc",
       clusterId: 1,
-      cleanAngle: 0.28,
-      cleanRadius: 154,
-      superAngle: 0.515,
-      superRadius: 171,
-      cleanLabelDx: 16,
-      cleanLabelDy: 10,
+      superAngleOffset: 0,
+      superRadiusOffset: 1,
       superLabelDx: 10,
       superLabelDy: 0,
     },
     {
       id: "agreeable",
       label: "Agreeable",
-      short: "Agr",
       color: "#f472b6",
       clusterId: 1,
-      cleanAngle: 0.34,
-      cleanRadius: 154,
-      superAngle: 0.555,
-      superRadius: 164,
-      cleanLabelDx: 16,
-      cleanLabelDy: 14,
+      superAngleOffset: 0.04,
+      superRadiusOffset: -6,
       superLabelDx: 10,
       superLabelDy: 14,
     },
     {
       id: "concise",
       label: "Concise",
-      short: "Con",
       color: "#a3e635",
       clusterId: 2,
-      cleanAngle: 1.82,
-      cleanRadius: 156,
-      superAngle: 2.42,
-      superRadius: 150,
-      cleanLabelDx: -18,
-      cleanLabelDy: 6,
+      superAngleOffset: -0.02,
+      superRadiusOffset: -6,
       superLabelDx: -10,
       superLabelDy: -4,
     },
     {
       id: "confident",
       label: "Confident",
-      short: "Conf",
       color: "#f97316",
       clusterId: 2,
-      cleanAngle: 1.88,
-      cleanRadius: 158,
-      superAngle: 2.46,
-      superRadius: 160,
-      cleanLabelDx: -18,
-      cleanLabelDy: 18,
+      superAngleOffset: 0.02,
+      superRadiusOffset: 4,
       superLabelDx: -10,
       superLabelDy: 14,
     },
   ];
 
-  const CLEAN_IDS = ["helpful", "honest"];
-  const CLUSTER_TOOLTIPS: Record<string, string> = {
-    cluster0:
-      "<strong>Shared direction encodes:</strong>Helpful: 42%<br>Honest: 31%<br>Safe: 27%",
-    cluster1:
-      "<strong>Shared direction encodes:</strong>Warm: 38%<br>Agreeable: 34%<br>Polite: 28%",
-    cluster2:
-      "<strong>Shared direction encodes:</strong>Concise: 56%<br>Confident: 44%",
+  // Clean-capacity layout is only meaningful for the two concepts that remain visible;
+  // every other concept fades out in clean mode and keeps its previous state underneath.
+  const CLEAN_LAYOUT: Record<string, CleanPos> = {
+    helpful: { angle: -1.48, radius: 166, labelDx: 18, labelDy: -12 },
+    honest: { angle: 0.14, radius: 162, labelDx: 16, labelDy: -2 },
   };
+  const CLEAN_IDS = Object.keys(CLEAN_LAYOUT);
 
   const cx = 380;
   const cy = 355;
@@ -481,61 +438,6 @@
   const softMerge = softGlow.append("feMerge");
   softMerge.append("feMergeNode").attr("in", "cloudBlur");
   softMerge.append("feMergeNode").attr("in", "SourceGraphic");
-
-  const pressureGrad = defs
-    .append("radialGradient")
-    .attr("id", "st-pressure-grad");
-  pressureGrad
-    .append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#e879f9")
-    .attr("stop-opacity", 0.32);
-  pressureGrad
-    .append("stop")
-    .attr("offset", "50%")
-    .attr("stop-color", "#60a5fa")
-    .attr("stop-opacity", 0.16);
-  pressureGrad
-    .append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#05060d")
-    .attr("stop-opacity", 0);
-
-  const blueCloud = defs.append("radialGradient").attr("id", "st-cluster-blue");
-  blueCloud
-    .append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#60a5fa")
-    .attr("stop-opacity", 0.32);
-  blueCloud
-    .append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#60a5fa")
-    .attr("stop-opacity", 0);
-
-  const pinkCloud = defs.append("radialGradient").attr("id", "st-cluster-pink");
-  pinkCloud
-    .append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#f472b6")
-    .attr("stop-opacity", 0.28);
-  pinkCloud
-    .append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#f472b6")
-    .attr("stop-opacity", 0);
-
-  const limeCloud = defs.append("radialGradient").attr("id", "st-cluster-lime");
-  limeCloud
-    .append("stop")
-    .attr("offset", "0%")
-    .attr("stop-color", "#a3e635")
-    .attr("stop-opacity", 0.26);
-  limeCloud
-    .append("stop")
-    .attr("offset", "100%")
-    .attr("stop-color", "#a3e635")
-    .attr("stop-opacity", 0);
 
   const axisLayer = svg.append("g");
   const fieldLayer = svg.append("g").style("mix-blend-mode", "screen");
@@ -603,8 +505,8 @@
     CONCEPTS.map(concept => [
       concept.id,
       {
-        angle: concept.superAngle,
-        radius: concept.superRadius,
+        angle: CLUSTERS[concept.clusterId].angle + concept.superAngleOffset,
+        radius: CLUSTERS[concept.clusterId].radius + concept.superRadiusOffset,
         opacity: 1,
         labelDx: concept.superLabelDx,
         labelDy: concept.superLabelDy,
@@ -691,6 +593,20 @@
       : CONCEPTS;
   }
 
+  function superAngleFor(concept: Concept): number {
+    return CLUSTERS[concept.clusterId].angle + concept.superAngleOffset;
+  }
+
+  function superRadiusFor(concept: Concept): number {
+    return CLUSTERS[concept.clusterId].radius + concept.superRadiusOffset;
+  }
+
+  function angleFor(concept: Concept, mode: Mode): number {
+    return mode === "clean"
+      ? (CLEAN_LAYOUT[concept.id]?.angle ?? 0)
+      : superAngleFor(concept);
+  }
+
   function targetStateFor(concept: Concept, mode: Mode): ConceptState {
     const isActive = mode === "super" || CLEAN_IDS.includes(concept.id);
     if (!isActive) {
@@ -706,19 +622,20 @@
     }
 
     if (mode === "clean") {
+      const clean = CLEAN_LAYOUT[concept.id];
       return {
-        angle: concept.cleanAngle,
-        radius: concept.cleanRadius * PLOT_SCALE,
+        angle: clean.angle,
+        radius: clean.radius * PLOT_SCALE,
         opacity: 1,
-        labelDx: concept.cleanLabelDx,
-        labelDy: concept.cleanLabelDy,
+        labelDx: clean.labelDx,
+        labelDy: clean.labelDy,
         leaderOpacity: 0.08,
       };
     }
 
     return {
-      angle: concept.superAngle,
-      radius: concept.superRadius * PLOT_SCALE,
+      angle: superAngleFor(concept),
+      radius: superRadiusFor(concept) * PLOT_SCALE,
       opacity: 1,
       labelDx: concept.superLabelDx,
       labelDy: concept.superLabelDy,
@@ -729,12 +646,7 @@
   function computeSimilarity(mode: Mode): number[][] {
     const active = activeConceptsFor(mode);
     return active.map(a =>
-      active.map(b =>
-        Math.cos(
-          (mode === "clean" ? a.cleanAngle : a.superAngle) -
-            (mode === "clean" ? b.cleanAngle : b.superAngle)
-        )
-      )
+      active.map(b => Math.cos(angleFor(a, mode) - angleFor(b, mode)))
     );
   }
 
@@ -769,38 +681,11 @@
 
   function clusterData(mode: Mode): ClusterInfo[] {
     if (mode === "clean") return [];
-    return [
-      {
-        id: "cluster0",
-        label: "Helpful / Honest / Safe",
-        angle: -0.885,
-        radius: 162 * PLOT_SCALE,
-        width: -20 * PLOT_SCALE,
-        color: "#60a5fa",
-        opacity: 0.22,
-        tooltip: CLUSTER_TOOLTIPS.cluster0,
-      },
-      {
-        id: "cluster1",
-        label: "Warm / Agreeable / Polite",
-        angle: 0.515,
-        radius: 170 * PLOT_SCALE,
-        width: 18 * PLOT_SCALE,
-        color: "#f472b6",
-        opacity: 0.2,
-        tooltip: CLUSTER_TOOLTIPS.cluster1,
-      },
-      {
-        id: "cluster2",
-        label: "Concise / Confident",
-        angle: 2.44,
-        radius: 156 * PLOT_SCALE,
-        width: -12 * PLOT_SCALE,
-        color: "#a3e635",
-        opacity: 0.18,
-        tooltip: CLUSTER_TOOLTIPS.cluster2,
-      },
-    ];
+    return CLUSTERS.map(c => ({
+      ...c,
+      radius: c.radius * PLOT_SCALE,
+      width: 0,
+    }));
   }
 
   function showTooltip(content: string, x: number, y: number) {
@@ -889,10 +774,6 @@
       .on("mouseleave", hideTooltip);
   }
 
-  function drawPressureClouds() {
-    svg.selectAll("ellipse").remove();
-  }
-
   function renderFrame(now: number) {
     const elapsed = (now - startTime) / 1000;
 
@@ -911,7 +792,9 @@
           : 1.2 * GRAPH_SCALE;
       const localPhase =
         elapsed *
-        (0.82 + concept.clusterId * 0.2 + Math.abs(concept.superAngle) * 0.08);
+        (0.82 +
+          concept.clusterId * 0.2 +
+          Math.abs(superAngleFor(concept)) * 0.08);
       const angle =
         base.angle +
         (isActive
@@ -1008,7 +891,6 @@
       button.classList.toggle("st-tab-active", button.dataset.mode === mode);
     });
 
-    drawPressureClouds();
     drawClusterZones(mode);
 
     CONCEPTS.forEach(concept => {
@@ -1019,7 +901,6 @@
         "g"
       );
       d3.select(transitionHost)
-        .transition()
         .transition()
         .duration(ANIM_MS)
         .ease(d3.easeCubicInOut)

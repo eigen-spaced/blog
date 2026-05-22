@@ -37,6 +37,8 @@
       <span class="lr-stat-value" id="lr-storage">--</span>
     </div>
   </div>
+
+  <p id="lr-caption" class="lr-caption"></p>
 </section>
 
 <style is:global>
@@ -497,6 +499,16 @@
   const errorEl = document.getElementById("lr-error")!;
   const storageEl = document.getElementById("lr-storage")!;
 
+  const CAPTIONS: Record<Mode, string> = {
+    1: "With a single latent direction, every user is just a scaled copy of one average response profile. Personal preferences collapse to a single dial — useful as a baseline, but most of the visible structure in P is gone.",
+    2: "With two illustrative latent directions, Alice and Bob load heavily on one direction while Carol and Dave load heavily on another. The original preference matrix can be approximately reconstructed from user weights and a shared reward basis, which is the core low-rank intuition behind LoRe.",
+    3: "Adding a third direction picks up finer distinctions on top of the analytical/expressive split. Reconstruction tightens, but storage grows — this is the bias/variance knob you turn when picking rank in LoRe.",
+  };
+
+  function captionFor(k: Mode): string {
+    return CAPTIONS[k];
+  }
+
   function updateNumberVisibility() {
     svg
       .selectAll<SVGTextElement, unknown>(".lr-number")
@@ -826,6 +838,7 @@
     errorEl.textContent = `${errPct.toFixed(1)}%`;
     varianceEl.textContent = `${exactVariance.toFixed(1)}%`;
     storageEl.textContent = `${storageLowRank} of ${storageFull} (${storagePct.toFixed(0)}%)`;
+    document.getElementById("lr-caption")!.textContent = captionFor(k);
     updateNumberVisibility();
 
     tabsRoot.querySelectorAll<HTMLButtonElement>(".lr-tab").forEach(b => {
