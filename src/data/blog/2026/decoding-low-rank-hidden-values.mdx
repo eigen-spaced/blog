@@ -73,9 +73,9 @@ By multiplying a user's specific weights ($W$) with this shared foundation ($R$)
 
 To truly understand how compression forces tradeoffs, use the interactive controls above the visual to manipulate the matrix decomposition in real time to change the rank of the decomposition, altering the many hidden directions the model is allowed to keep.
 
-- Setting $k = 1$ forces extreme compression. The model tries to explain every single user with just one generic trend, leading to a high *Reconstruction Error*.
-- Setting $k = 2$ hits the mathematical sweet spot for this specific data, capturing almost 100% of the underlying structure by perfectly separating the two distinct user groups.
-- Setting $k = 3$ or higher over-allocates capacity, meaning we are storing more data parameters than there is actual unique information in the system.
+- $k = 1$ forces extreme compression. The model tries to explain every single user with just one generic trend, leading to a high *Reconstruction Error*.
+- $k = 2$ hits the mathematical sweet spot for this specific data, capturing almost 100% of the underlying structure by perfectly separating the two distinct user groups.
+- $k = 3$ or higher over-allocates capacity, meaning we are storing more data parameters than there is actual unique information in the system.
 
 
 ## Preference modelling and Bradley-Terry
@@ -196,7 +196,7 @@ Where low-rank reward modelling compresses preference into abstract latent dimen
 
 Conceptually, this resembles a control panel with labeled knobs rather than a compressed latent space whose internal meaning must later be inferred through interpretability techniques. This architectural choice moves reward modelling closer toward a more interpretable form of behavioural decomposition.
 
-# Toward more interpretable reward decomposition
+## Toward more interpretable reward decomposition
 
 This architectural choice moves reward modelling closer toward a more interpretable form of behavioural decomposition. When ArmoRM evaluates a response and outputs a final reward score, the contribution of different behavioural objectives can be separated more explicitly than in dense latent reward models.
 
