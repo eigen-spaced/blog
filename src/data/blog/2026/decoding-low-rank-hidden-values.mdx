@@ -184,29 +184,29 @@ This interpretability gap introduces severe risks for safety and alignment:
 
 - If we cannot explicitly label what a latent basis represents, we cannot audit the model for hidden vulnerabilities. A basis could be implicitly capturing harmful biases or deceptive sycophancy, completely hidden beneath the surface of a seemingly benign mathematical mixture. This is the **audit risk**.
 
-- Safety requires precise control. If we want to steer a model away from harmful behaviors, we need a surgical scalpel. Because superposition glues safe and unsafe concepts together in the same latent dimensions, any attempt to damp down an undesirable trait acts as a sledgehammer, inadvertently breaking crucial, unrelated capabilities. This is the **control risk**.
+- Safety requires precise control. If we want to steer a model away from harmful behaviours, we need a surgical scalpel. Because superposition glues safe and unsafe concepts together in the same latent dimensions, any attempt to damp down an undesirable trait acts as a sledgehammer, inadvertently breaking crucial, unrelated capabilities. This is the **control risk**.
 
 If we want to use LoRe for true safety and steering, we cannot stop at basic matrix decomposition. We need a way to untangle this low-rank world and project it into a space where features actually make sense to humans.
 
-# The Bridge: ArmoRM and the Vision of Transparency
+# ArmoRM and the Vision of Transparency
 
-To understand how we fix the messiness of superposition, it helps to look at **Absolute-Rating Multi-Objective Reward Model (ArmoRM)** (Wang et al., 2024), a model that took a fundamentally different path toward transparency.
+In my attempt to understand the broader interpretability landscape around reward modeling, I came across **Absolute-Rating Multi-Objective Reward Model (ArmoRM)** (Wang et al., 2024), which approaches the problem from a very different direction.
 
-If low-rank reward models leave us guessing what’s happening under the hood, ArmoRM represents the "interpretable alternative." Instead of forcing a neural network to invent its own abstract, compressed latent dimensions, ArmoRM is designed around a collection of explicitly labeled experts—each dedicated to a specific, human-understandable attribute like "Helpfulness," "Truthfulness," or "Verbosity."
+Where low-rank reward modelling compresses preference into abstract latent dimensions, ArmoRM instead attempts to structure reward modelling around explicitly separated objectives. Rather than relying entirely on emergent latent reward bases, the model is organised around labeled "experts", each associated with a more human-understandable behavioural attribute such as helpfulness, truthfulness, harmlessness, or verbosity.
 
-Think of it as a control panel with clearly labeled buttons.
+Conceptually, this resembles a control panel with labeled knobs rather than a compressed latent space whose internal meaning must later be inferred through interpretability techniques. This architectural choice moves reward modelling closer toward a more interpretable form of behavioural decomposition.
 
-## The Gold Standard of Interpretability
+# Toward more interpretable reward decomposition
 
-This architectural choice provides a glimpse of the gold standard for AI safety: **total decision provenance**.
+This architectural choice moves reward modelling closer toward a more interpretable form of behavioural decomposition. When ArmoRM evaluates a response and outputs a final reward score, the contribution of different behavioural objectives can be separated more explicitly than in dense latent reward models.
 
-When ArmoRM evaluates a model's response and outputs a final reward score, it doesn't just hand over an opaque number. It reveals the exact recipe. We can look at the dashboard and see precisely how much the "Helpfulness" expert approved of the response versus how heavily the "Verbosity" expert penalised it for being too wordy.
+This does not fully solve interpretability. The experts themselves are still neural components with their own internal abstractions and limitations. However, the architecture introduces a much cleaner level of attribution and control compared to purely compressed latent reward spaces whose dimensions may emerge without any direct human labeling.
 
-Knowing exactly which part of a model is driving a decision means we are no longer guessing. If a model behaves unexpectedly, we can trace the failure directly back to a specific, human-labeled component, making debugging and auditing an intentional science rather than a game of mathematical detective work.
+This distinction matters for safety and auditing. If a model behaves unexpectedly, researchers can more directly inspect which behavioural objectives contributed to that decision rather than inferring mean retrospectively from entangled latent directions. The tradeoff is that this interpretability is partially imposed architecturally. ArmoRM requires researchers to define meaningful behavioural objectives ahead of time. But many behaviours that emerge in LLMs may not map well onto predefined categories.
 
 But while ArmoRM’s predefined, hand-labeled approach gives us pristine clarity, it also requires us to know exactly what we want to measure ahead of time. What happens when we want that same level of "labeled button" clarity inside the raw, unconstrained mathematical power of a low-rank world?
 
-To get the best of both worlds, we need a different kind of tool—a way to retroactively install those labeled buttons onto a model that has already scrambled its concepts.
+To get the best of both worlds, we need a different kind of tool — a way to retroactively install those labeled buttons onto a model that has already scrambled its concepts.
 
 # The Interpretability Toolbox
 
@@ -220,7 +220,7 @@ To untangle a dense thicket of overlapping data, we use a tool called a **Sparse
 
 Instead of treating the low-rank latent dimensions as monolithic codes, SAE acts like a mathematical prism. It projects the model's dense internal activations into a much higher-dimensional space, forcing the representations to be *sparse*—meaning only a few concepts are allowed to "fire" at any given time.
 
-The breakthrough here is that it effectively reverses superposition. By expanding the space and enforcing sparsity, it separates the tangled mixtures into individual, **monosemantic** (single-meaning) directions. Instead of an uninterpretable metric like "Vector #4," the SAE isolates manageable, distinct features like a "Brevity Feature," a "Sarcasm Feature," or a "Sycophancy Feature."
+The breakthrough here is that it effectively reverses superposition (sort of). By expanding the space and enforcing sparsity, it separates the tangled mixtures into individual, **monosemantic** (single-meaning) directions. Instead of an uninterpretable metric like "Vector #4," the SAE isolates manageable, distinct features like a "Brevity Feature," a "Sarcasm Feature," or a "Sycophancy Feature."
 
 * **For further reading on SAEs:** See the foundational work on scaling dictionary learning by Anthropic in their really comprehensive paper [Towards Monosemanticity](https://transformer-circuits.pub/2023/monosemantic-features/index.html) paper and OpenAI's work on [Sparse Autoencoders for Language Models](https://arxiv.org/abs/2406.04093).
 
@@ -234,8 +234,6 @@ SARM integrates a pretrained SAE directly into the layers of a reward model. Ins
 
 SARM changes the game for safety by introducing direct attribution. If a reward model gives a response an unusually high or low score, we can look at the exact weights of the value head to see which interpretable features contributed to that score. Furthermore, it gives us surgical control: if we notice the model is rewarding subtle forms of bias, we can dynamically adjust or penalise the weight of that specific SAE, feature potentially allowing more targeted interventions.
 
-* **Read more about it:** [Interpretable Reward Model via Sparse Autoencoder (SARM)](https://arxiv.org/abs/2508.08746)
-
 ## Concept Bottleneck Reward Models (CB-RM)
 
 While SARM retroactively extracts features from a trained model using an SAE, CB-RM bake interpretability directly into the training pipeline from day one.
@@ -243,8 +241,6 @@ While SARM retroactively extracts features from a trained model using an SAE, CB
 A CB-RM constructs a deliberate architectural "bottleneck" that forces the model to explain itself in human terms *before* it can issue a reward score. When evaluating a response, the model must first predict a series of pre-defined, human-interpretable concepts (e.g., *Is this factual? Is this toxic? Is this response too repetitive?*). The final reward is strictly calculated as a function of these intermediate concept predictions.
 
 Because the bottleneck is explicit, a CB-RM provides a built-in audit trail. If a system misbehaves during alignment, safety teams don't need to guess which latent basis failed. They can look directly at the concept bottleneck layer to verify if the model miscalculated a specific human value, turning preference learning into an auditable, rule-bound process.
-
-* **Read more about it:** [Interpretable Reward Modeling with Active Concept Bottlenecks (CB-RM)](https://arxiv.org/abs/2507.04695)
 
 By deploying tools like SAEs, SARM, and CB-RMs, we bridge the gap between raw mathematical efficiency and human oversight. We no longer have to choose between the high performance of low-rank models and the strict transparency required for AI safety; we can finally see exactly where our reward signals are pointing.
 
