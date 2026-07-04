@@ -50,7 +50,11 @@ const structuredData = {
 ---
 
 <!doctype html>
-<html lang=`${SITE.lang ?? "en"}` class={`${scrollSmooth && "scroll-smooth"}`}>
+<html
+  lang=`${SITE.lang ?? "en"}`
+  data-theme="dark"
+  class={`${scrollSmooth && "scroll-smooth"}`}
+>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
@@ -71,7 +75,8 @@ const structuredData = {
     <meta property="og:url" content={canonicalURL} />
     <meta property="og:image" content={socialImageURL} />
 
-    <Font cssVariable="--font-custom" />
+    <Font cssVariable="--font-source-serif" preload />
+    <Font cssVariable="--font-plex-mono" preload />
 
     <!-- Article Published/Modified time -->
     {
@@ -114,7 +119,7 @@ const structuredData = {
       href={new URL("rss.xml", Astro.site)}
     />
 
-    <meta name="theme-color" content="" />
+    <meta name="theme-color" content="#1f1b17" />
 
     {
       // If PUBLIC_GOOGLE_SITE_VERIFICATION is set in the environment variable,
@@ -129,8 +134,6 @@ const structuredData = {
     }
 
     <ClientRouter />
-
-    <script is:inline src="/toggle-theme.js"></script>
   </head>
   <body>
     <slot />

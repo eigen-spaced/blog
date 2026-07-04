@@ -11,4 +11,4 @@ This is where I think through it all. Technical insights, cultural observations,
 
 If you're someone who's also curious about multiple domains and enjoys perspectives that don't stay neatly categorised, you might find something worthwhile here.
 
-<a href="/resume">[View my resume →]</a>
+<a href="/projects">[View my projects →]</a>

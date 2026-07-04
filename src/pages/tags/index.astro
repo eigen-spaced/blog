@@ -1,24 +1,92 @@
 ---
 import { getCollection } from "astro:content";
-import Main from "@/layouts/Main.astro";
 import Layout from "@/layouts/Layout.astro";
-import Tag from "@/components/Tag.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
+import Tag from "@/components/Tag.astro";
 import getUniqueTags from "@/utils/getUniqueTags";
+import getPostsByTag from "@/utils/getPostsByTag";
 import { SITE } from "@/config";
 
 const posts = await getCollection("blog");
+const tags = getUniqueTags(posts);
+const total = tags.length;
 
-let tags = getUniqueTags(posts);
+const tagsWithCount = tags.map(({ tag, tagName }) => ({
+  tag,
+  tagName,
+  count: getPostsByTag(posts, tag).length,
+}));
 ---
 
 <Layout title={`Tags | ${SITE.title}`}>
   <Header />
-  <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
-    <ul>
-      {tags.map(({ tag, tagName }) => <Tag {tag} {tagName} size="lg" />)}
+  <main id="main-content" class="tags-main">
+    <div class="tags-head">
+      <h1 class="tags-title">Tags</h1>
+      <span class="tags-count">
+        {total} {total === 1 ? "TAG" : "TAGS"}
+      </span>
+    </div>
+    <p class="tags-desc">All the tags used in posts.</p>
+    <div class="tags-rule" aria-hidden="true"></div>
+    <ul class="tag-cloud">
+      {
+        tagsWithCount.map(({ tag, tagName, count }) => (
+          <Tag {tag} {tagName} {count} size="lg" />
+        ))
+      }
     </ul>
-  </Main>
+  </main>
   <Footer />
 </Layout>
+
+<style>
+  .tags-main {
+    width: 100%;
+    max-width: 884px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  .tags-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .tags-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+  .tags-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .tags-desc {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .tags-rule {
+    margin: 20px 0 28px;
+    border-top: 1px dotted var(--divider);
+  }
+  .tag-cloud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  @media (max-width: 700px) {
+    .tags-main {
+      padding: 40px 16px 72px;
+    }
+  }
+</style>

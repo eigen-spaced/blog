@@ -1,8 +1,6 @@
 import { defineConfig, fontProviders, envField } from "astro/config";
 import tailwindcss from "@tailwindcss/vite";
 import sitemap from "@astrojs/sitemap";
-import remarkToc from "remark-toc";
-import remarkCollapse from "remark-collapse";
 import {
   transformerNotationDiff,
   transformerNotationHighlight,
@@ -12,6 +10,8 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
 import { transformerFileName } from "./src/utils/transformers/fileName";
+import { remarkReadingTime } from "./src/utils/remark/readingTime";
+import { rehypeFootnotesToMargin } from "./src/utils/rehype/footnotesToMargin";
 import { SITE } from "./src/config";
 
 import mdx from "@astrojs/mdx";
@@ -26,12 +26,8 @@ export default defineConfig({
     mdx(),
   ],
   markdown: {
-    remarkPlugins: [
-      remarkMath,
-      remarkToc,
-      [remarkCollapse, { test: "Table of contents" }],
-    ],
-    rehypePlugins: [rehypeKatex],
+    remarkPlugins: [remarkMath, remarkReadingTime],
+    rehypePlugins: [rehypeKatex, rehypeFootnotesToMargin],
     shikiConfig: {
       // For more themes, visit https://shiki.style/themes
       themes: { light: "min-light", dark: "night-owl" },
@@ -70,33 +66,21 @@ export default defineConfig({
   },
   fonts: [
     {
-      name: "Abtera",
-      cssVariable: "--font-custom",
-      provider: fontProviders.local(),
-      options: {
-        variants: [
-          {
-            weight: 300,
-            style: "normal",
-            src: ["./src/assets/fonts/Abtera-Light.ttf"],
-          },
-          {
-            weight: 400,
-            style: "normal",
-            src: ["./src/assets/fonts/Abtera-Regular.ttf"],
-          },
-          {
-            weight: 600,
-            style: "normal",
-            src: ["./src/assets/fonts/Abtera-SemiBold.ttf"],
-          },
-          {
-            weight: 700,
-            style: "normal",
-            src: ["./src/assets/fonts/Abtera-Bold.ttf"],
-          },
-        ],
-      },
+      name: "Source Serif 4",
+      cssVariable: "--font-source-serif",
+      provider: fontProviders.google(),
+      optimizedFallbacks: true,
+      fallbacks: ["Georgia", "serif"],
+      weights: [400, 600],
+      styles: ["normal", "italic"],
+    },
+    {
+      name: "IBM Plex Mono",
+      cssVariable: "--font-plex-mono",
+      provider: fontProviders.google(),
+      fallbacks: ["ui-monospace", "monospace"],
+      weights: [400, 500, 600],
+      styles: ["normal"],
     },
   ],
 });

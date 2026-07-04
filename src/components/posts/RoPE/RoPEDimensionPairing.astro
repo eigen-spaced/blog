@@ -2,8 +2,8 @@
 /** RoPE Dimension Pairing — query vector strip (colored by pair), slider, rotation circles, before/after bar chart */
 ---
 
-<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
-  <p class="mb-4 text-base leading-relaxed text-gray-400">
+<div class="mb-4 rounded-none border border-[#0e0c0a] bg-[#221d17] p-5 shadow-[3px_3px_0_rgba(0,0,0,0.35)]">
+  <p class="mb-4 text-base leading-relaxed text-[#8a7d66]">
     Drag the slider to change the token position m. Watch how each pair rotates.
   </p>
 
@@ -14,10 +14,10 @@
 
   <div class="mt-4 mb-3">
     <label
-      class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+      class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-[#8a7d66] uppercase"
       for="dim-pos-slider"
     >
-      Token position (m) = <span class="text-gray-200" id="dim-pos-val">5</span>
+      Token position (m) = <span class="text-[#e9e0d0]" id="dim-pos-val">5</span>
     </label>
     <input
       type="range"
@@ -25,19 +25,19 @@
       min="0"
       max="20"
       value="5"
-      class="w-full accent-indigo-400"
+      class="w-full accent-amber-400"
     />
   </div>
 
   <p
-    class="mb-2 text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+    class="mb-2 text-[0.85rem] font-semibold tracking-wider text-[#8a7d66] uppercase"
   >
     2D rotation per pair (Scroll me &rarr;)
   </p>
   <div class="flex gap-3 overflow-x-auto pb-2" id="dim-rotation-plots"></div>
 
   <p
-    class="mt-4 mb-2 text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+    class="mt-4 mb-2 text-[0.85rem] font-semibold tracking-wider text-[#8a7d66] uppercase"
   >
     Embedding values: before & after RoPE
   </p>
@@ -49,20 +49,20 @@
 
 <style is:global>
   [data-pair="0"] {
-    background: #1e3a5f;
-    color: #60a5fa;
+    background: #24384a;
+    color: #6fa8d0;
   }
   [data-pair="1"] {
-    background: #4a1942;
-    color: #f472b6;
+    background: #3d2734;
+    color: #d98ab0;
   }
   [data-pair="2"] {
-    background: #14432a;
-    color: #34d399;
+    background: #1f3a30;
+    color: #6cc0a0;
   }
   [data-pair="3"] {
-    background: #452a08;
-    color: #fbbf24;
+    background: #3a2c12;
+    color: #e8a33d;
   }
   .strip-cell {
     width: 64px;
@@ -89,7 +89,7 @@
     width: 64px;
     text-align: center;
     font-size: 0.85rem;
-    color: #9ca3af;
+    color: #8a7d66;
     flex-shrink: 0;
     font-variant-numeric: tabular-nums;
   }
@@ -122,7 +122,7 @@
   }
   .rotation-card .angle-text {
     font-size: 0.95rem;
-    color: #9ca3af;
+    color: #8a7d66;
     text-align: center;
     margin-top: 0.15rem;
   }
@@ -288,7 +288,7 @@
         .attr("cy", cy - rb * scale)
         .attr("r", 5)
         .attr("fill", color)
-        .attr("stroke", "#1b1f29")
+        .attr("stroke", "#221d17")
         .attr("stroke-width", 1.5);
 
       const angleDeg = ((angle * 180) / Math.PI) % 360;
@@ -303,7 +303,7 @@
       const vals = document.createElement("div");
       vals.className = "vals";
       vals.innerHTML = `
-        <div class="text-[0.95rem] text-gray-400">Before: &nbsp; (${a.toFixed(2)}, ${b.toFixed(2)})</div>
+        <div class="text-[0.95rem] text-[#8a7d66]">Before: &nbsp; (${a.toFixed(2)}, ${b.toFixed(2)})</div>
         <div class="text-[0.95rem] font-semibold" style="color:${color}">After: &nbsp; (${ra.toFixed(2)}, ${rb.toFixed(2)})</div>
       `;
       card.appendChild(vals);
@@ -405,7 +405,7 @@
       .call(d3.axisLeft(y).ticks(5).tickSize(0).tickPadding(6))
       .call(g => g.select(".domain").remove())
       .call(g =>
-        g.selectAll("text").attr("fill", "#9ca3af").style("font-size", "0.9rem")
+        g.selectAll("text").attr("fill", "#8a7d66").style("font-size", "0.9rem")
       );
 
     const leg = g
@@ -422,7 +422,7 @@
       .append("text")
       .attr("x", 14)
       .attr("y", 8)
-      .attr("fill", "#9ca3af")
+      .attr("fill", "#8a7d66")
       .attr("font-size", "0.95rem")
       .text("Original");
     leg
@@ -437,7 +437,7 @@
       .append("text")
       .attr("x", 109)
       .attr("y", 8)
-      .attr("fill", "#9ca3af")
+      .attr("fill", "#8a7d66")
       .attr("font-size", "0.95rem")
       .text("After RoPE");
   }

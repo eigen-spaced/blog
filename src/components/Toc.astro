@@ -1,0 +1,118 @@
+---
+interface TocHeading {
+  slug: string;
+  text: string;
+  sub: boolean;
+}
+
+interface Props {
+  headings: TocHeading[];
+  minutesRead: number;
+}
+
+const { headings, minutesRead } = Astro.props;
+---
+
+<div class="toc-panel bevel-panel">
+  <div class="titlebar toc-titlebar">
+    <span class="mono-label toc-label">CONTENTS.TOC</span>
+    <span class="toc-dots" aria-hidden="true">
+      <span class="win-dot win-dot--muted"></span>
+      <span class="win-dot win-dot--accent"></span>
+    </span>
+  </div>
+  <nav class="toc-body" aria-label="Table of contents">
+    <ul>
+      {
+        headings.map(h => (
+          <li class:list={["toc-item", { "toc-sub": h.sub }]}>
+            <a href={`#${h.slug}`} data-toc-link={h.slug}>
+              {h.text}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+  <div class="toc-foot">
+    <span class="mono-label read-label">READ · {minutesRead} MIN</span>
+    <div class="progress-track bevel-inset">
+      <div class="progress-fill" id="reading-progress"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .toc-panel {
+    background: var(--surface);
+  }
+  .toc-titlebar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 10px;
+  }
+  .toc-label {
+    font-size: 10px;
+  }
+  .toc-dots {
+    display: inline-flex;
+    gap: 5px;
+  }
+  .toc-body {
+    padding: 10px 8px;
+  }
+  .toc-body ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .toc-item a {
+    display: block;
+    padding: 4px 10px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 12.5px;
+    line-height: 1.35;
+    color: var(--text-nav);
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .toc-item.toc-sub a {
+    padding-left: 24px;
+    font-size: 12px;
+    color: var(--text-toc);
+  }
+  .toc-item a:hover {
+    color: var(--text-strong);
+  }
+  .toc-item a[data-active="true"] {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+    border-top: 1px solid rgba(255, 255, 255, 0.35);
+    border-bottom: 1px solid var(--line);
+  }
+  .toc-foot {
+    padding: 10px;
+    border-top: 1px dotted var(--divider);
+  }
+  .read-label {
+    display: block;
+    font-size: 10px;
+    margin-bottom: 6px;
+  }
+  .progress-track {
+    height: 8px;
+    background: rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 0%;
+    background: repeating-linear-gradient(
+      90deg,
+      var(--accent) 0 6px,
+      rgba(0, 0, 0, 0.25) 6px 8px
+    );
+  }
+</style>

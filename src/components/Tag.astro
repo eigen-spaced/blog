@@ -5,32 +5,71 @@ export interface Props {
   tag: string;
   tagName: string;
   size?: "sm" | "lg";
+  count?: number;
 }
 
-const { tag, tagName, size = "sm" } = Astro.props;
+const { tag, tagName, size = "sm", count } = Astro.props;
 ---
 
-<li
-  class:list={[
-    "group inline-block group-hover:cursor-pointer",
-    size === "sm" ? "my-1 underline-offset-4" : "mx-1 my-3 underline-offset-8",
-  ]}
->
+<li class="tag-item">
   <a
     href={`/tags/${tag}/`}
     transition:name={tag}
-    class:list={[
-      "relative pr-2 text-lg underline decoration-dashed group-hover:-top-0.5 group-hover:text-accent focus-visible:p-1",
-      { "text-sm": size === "sm" },
-    ]}
+    class:list={["tag-chip bevel-raised", { "tag-chip--lg": size === "lg" }]}
   >
-    <IconHash
-      class:list={[
-        "inline-block opacity-80",
-        { "-mr-3.5 size-4": size === "sm" },
-        { "-mr-5 size-6": size === "lg" },
-      ]}
-    />
-    &nbsp;<span>{tagName}</span>
+    <IconHash class="tag-hash" />
+    <span class="tag-name">{tagName}</span>
+    {count != null && <span class="tag-count">{count}</span>}
   </a>
 </li>
+
+<style>
+  .tag-item {
+    display: inline-block;
+    list-style: none;
+  }
+  .tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-nav);
+    background: var(--surface-btn);
+    padding: 5px 11px;
+    text-decoration: none;
+  }
+  .tag-chip:hover {
+    background: var(--surface-btn-hover);
+  }
+  .tag-chip:hover .tag-name {
+    color: var(--text-strong);
+  }
+  .tag-chip--lg {
+    font-size: 15px;
+    gap: 7px;
+    padding: 7px 14px;
+  }
+  .tag-hash {
+    width: 15px;
+    height: 15px;
+    flex: none;
+    color: var(--accent);
+  }
+  .tag-chip--lg .tag-hash {
+    width: 17px;
+    height: 17px;
+  }
+  .tag-name {
+    color: inherit;
+  }
+  .tag-count {
+    margin-left: 1px;
+    padding-left: 7px;
+    border-left: 1px solid var(--divider);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+</style>

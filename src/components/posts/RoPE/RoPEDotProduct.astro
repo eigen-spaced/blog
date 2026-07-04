@@ -2,24 +2,24 @@
 /** RoPE Dot Product — heatmap of cos(d·θ_k) for every pair × every distance out to 800 token positions. Static (no slider). Shows the frequency spectrum's effect on attention and how the reliable band of pairs narrows as distance grows. */
 ---
 
-<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
+<div class="mb-4 rounded-none border border-[#0e0c0a] bg-[#221d17] p-5 shadow-[3px_3px_0_rgba(0,0,0,0.35)]">
   <div class="max-w-[700px]">
     <!-- Color legend for cosine alignment -->
     <div class="mb-3 flex justify-center">
       <div class="w-full max-w-[420px]">
         <div
-          class="mb-1 text-center text-[0.7rem] tracking-wider text-gray-500 uppercase"
+          class="mb-1 text-center text-[0.7rem] tracking-wider text-[#8a7d66] uppercase"
         >
           Cosine alignment between q and k
         </div>
         <div
           class="h-3 w-full rounded-sm"
-          style="background: linear-gradient(to right, #38bdf8, #2e3347, #fb923c);"
+          style="background: linear-gradient(to right, #6fa8d0, #0e0c0a, #fb923c);"
         >
         </div>
         <div class="mt-1 flex justify-between font-mono text-[0.72rem]">
-          <span style="color:#38bdf8">−1 opposite</span>
-          <span class="text-gray-400">0 perpendicular</span>
+          <span style="color:#6fa8d0">−1 opposite</span>
+          <span class="text-[#8a7d66]">0 perpendicular</span>
           <span style="color:#fb923c">+1 aligned</span>
         </div>
       </div>
@@ -39,7 +39,7 @@
   const D_MAX = 800;
   const SPLIT_K = 16;
 
-  const colorOf = d3.interpolateRgbBasis(["#38bdf8", "#2e3347", "#fb923c"]);
+  const colorOf = d3.interpolateRgbBasis(["#6fa8d0", "#0e0c0a", "#fb923c"]);
   const colorAt = (cosVal: number) => colorOf((cosVal + 1) / 2);
 
   const margin = { top: 16, right: 16, bottom: 50, left: 56 };
@@ -100,7 +100,7 @@
       .attr("x", -8)
       .attr("y", y(k)! + cellH / 2 + 4)
       .attr("text-anchor", "end")
-      .attr("fill", "#9ca3af")
+      .attr("fill", "#8a7d66")
       .attr("font-size", "0.78rem")
       .text(`k=${k}`);
   });
@@ -109,7 +109,7 @@
     .attr("x", -innerH / 2)
     .attr("y", -42)
     .attr("text-anchor", "middle")
-    .attr("fill", "#9ca3af")
+    .attr("fill", "#8a7d66")
     .attr("font-size", "0.85rem")
     .text("pair k · fast → slow");
 
@@ -119,7 +119,7 @@
       .attr("x", x(d))
       .attr("y", innerH + 16)
       .attr("text-anchor", "middle")
-      .attr("fill", "#9ca3af")
+      .attr("fill", "#8a7d66")
       .attr("font-size", "0.85rem")
       .text(`${d}`);
   });
@@ -127,7 +127,7 @@
     .attr("x", innerW / 2)
     .attr("y", innerH + 38)
     .attr("text-anchor", "middle")
-    .attr("fill", "#9ca3af")
+    .attr("fill", "#8a7d66")
     .attr("font-size", "0.9rem")
     .text("distance between tokens (positions apart)");
 

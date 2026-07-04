@@ -2,29 +2,29 @@
 /** RoPE Relative Distance — changing the relative distance between two tokens changes the angle between their rotated vectors */
 ---
 
-<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
-  <p class="mb-4 text-base leading-relaxed text-gray-400">
+<div class="mb-4 rounded-none border border-[#0e0c0a] bg-[#221d17] p-5 shadow-[3px_3px_0_rgba(0,0,0,0.35)]">
+  <p class="mb-4 text-base leading-relaxed text-[#8a7d66]">
     Switch between the sentences and watch what happens. As the distance between <strong
-      class="text-sky-400">"astronaut"</strong
+      class="text-[#6fa8d0]">"astronaut"</strong
     > and
-    <strong class="text-amber-400">"moon"</strong> changes, the angle between their
+    <strong class="text-[#e8a33d]">"moon"</strong> changes, the angle between their
     vectors changes too.
   </p>
 
   <div class="mb-3 flex items-center gap-2">
     <span
-      class="mr-1 text-[0.95rem] font-semibold tracking-wider text-gray-400 uppercase"
+      class="mr-1 text-[0.95rem] font-semibold tracking-wider text-[#8a7d66] uppercase"
       >Sentence:</span
     >
     <button
       id="rel-btn-a"
-      class="cursor-pointer rounded-lg border border-indigo-500/40 bg-indigo-500/20 px-4 py-1.5 text-[0.95rem] font-semibold text-indigo-200 transition-all duration-200"
+      class="cursor-pointer rounded-lg border border-amber-500/40 bg-amber-500/20 px-4 py-1.5 text-[0.95rem] font-semibold text-amber-200 transition-all duration-200"
     >
       "...explores the moon"
     </button>
     <button
       id="rel-btn-b"
-      class="cursor-pointer rounded-lg border border-[#2e3347] bg-[#2a3040] px-4 py-1.5 text-[0.95rem] font-semibold text-gray-400 transition-all duration-200 hover:text-gray-300"
+      class="cursor-pointer rounded-lg border border-[#0e0c0a] bg-[#2a241d] px-4 py-1.5 text-[0.95rem] font-semibold text-[#8a7d66] transition-all duration-200 hover:text-[#c8bda6]"
     >
       "...did a flyby of the moon"
     </button>
@@ -33,31 +33,31 @@
   <div class="mb-1 flex flex-wrap gap-1" id="rel-tokens"></div>
   <div class="mb-3 flex flex-wrap gap-1" id="rel-indices"></div>
 
-  <div class="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-[0.95rem] text-gray-400">
+  <div class="mb-4 flex flex-wrap gap-x-5 gap-y-1 text-[0.95rem] text-[#8a7d66]">
     <span
       ><span
-        class="mr-1 inline-block h-2 w-2 rounded-full bg-sky-400 align-middle"
+        class="mr-1 inline-block h-2 w-2 rounded-full bg-[#6fa8d0] align-middle"
       ></span> astronaut pos <span
         id="rel-pos-a"
-        class="font-mono text-gray-200">1</span
+        class="font-mono text-[#e9e0d0]">1</span
       ></span
     >
     <span
       ><span
-        class="mr-1 inline-block h-2 w-2 rounded-full bg-amber-400 align-middle"
-      ></span> moon pos <span id="rel-pos-m" class="font-mono text-gray-200"
+        class="mr-1 inline-block h-2 w-2 rounded-full bg-[#e8a33d] align-middle"
+      ></span> moon pos <span id="rel-pos-m" class="font-mono text-[#e9e0d0]"
         >4</span
       ></span
     >
     <span
       >Relative distance: <span
         id="rel-delta"
-        class="font-mono font-semibold text-emerald-400">3</span
+        class="font-mono font-semibold text-[#6cc0a0]">3</span
       ></span
     >
     <span
       >&alpha;: <span
-        class="font-mono font-semibold text-emerald-400"
+        class="font-mono font-semibold text-[#6cc0a0]"
         id="rel-angle-val"></span></span
     >
   </div>
@@ -74,36 +74,36 @@
     font-size: 1rem;
     font-weight: 500;
     background: rgba(255, 255, 255, 0.04);
-    color: #d1d5db;
+    color: #c8bda6;
     border: 1px solid transparent;
     transition: all 0.3s;
   }
   .stok.hl-a {
-    background: rgba(56, 189, 248, 0.12);
-    color: #60a5fa;
+    background: rgba(111, 168, 208, 0.12);
+    color: #6fa8d0;
     font-weight: 700;
-    border-color: rgba(56, 189, 248, 0.25);
+    border-color: rgba(111, 168, 208, 0.25);
   }
   .stok.hl-m {
-    background: rgba(251, 191, 36, 0.12);
-    color: #fbbf24;
+    background: rgba(232, 163, 61, 0.12);
+    color: #e8a33d;
     font-weight: 700;
-    border-color: rgba(251, 191, 36, 0.25);
+    border-color: rgba(232, 163, 61, 0.25);
   }
   .sidx {
     display: inline-block;
     padding: 0 0.6rem;
     text-align: center;
     font-size: 0.85rem;
-    color: #6b7280;
+    color: #8a7d66;
     font-variant-numeric: tabular-nums;
   }
   .sidx.hl-a {
-    color: #60a5fa;
+    color: #6fa8d0;
     font-weight: 600;
   }
   .sidx.hl-m {
-    color: #fbbf24;
+    color: #e8a33d;
     font-weight: 600;
   }
 </style>
@@ -151,11 +151,11 @@
 
   function buildPlot(animate: boolean) {
     const svg = d3.select("#rel-plot");
-    const W = 480,
-      H = 360,
+    const W = 540,
+      H = 390,
       CX = W / 2,
       CY = H / 2,
-      R = 135;
+      R = 165;
     const theta = thetaSmol(K);
     const s = SENTS[cur];
     const angA = s.aPos * theta,
@@ -206,8 +206,8 @@
       svg
         .append("path")
         .attr("class", "rel-arc")
-        .attr("fill", "rgba(52,211,153,0.10)")
-        .attr("stroke", "#34d399")
+        .attr("fill", "rgba(108,192,160,0.10)")
+        .attr("stroke", "#6cc0a0")
         .attr("stroke-width", 1.5)
         .attr("stroke-opacity", 0.5);
       svg
@@ -215,7 +215,7 @@
         .attr("class", "rel-line-a")
         .attr("x1", CX)
         .attr("y1", CY)
-        .attr("stroke", "#60a5fa")
+        .attr("stroke", "#6fa8d0")
         .attr("stroke-width", 2)
         .attr("stroke-opacity", 0.5);
       svg
@@ -223,39 +223,39 @@
         .attr("class", "rel-line-m")
         .attr("x1", CX)
         .attr("y1", CY)
-        .attr("stroke", "#fbbf24")
+        .attr("stroke", "#e8a33d")
         .attr("stroke-width", 2)
         .attr("stroke-opacity", 0.5);
       svg
         .append("circle")
         .attr("class", "rel-dot-a")
         .attr("r", 7)
-        .attr("fill", "#60a5fa")
-        .attr("stroke", "#1b1f29")
+        .attr("fill", "#6fa8d0")
+        .attr("stroke", "#221d17")
         .attr("stroke-width", 2);
       svg
         .append("circle")
         .attr("class", "rel-dot-m")
         .attr("r", 7)
-        .attr("fill", "#fbbf24")
-        .attr("stroke", "#1b1f29")
+        .attr("fill", "#e8a33d")
+        .attr("stroke", "#221d17")
         .attr("stroke-width", 2);
       svg
         .append("text")
         .attr("class", "rel-lbl-a")
-        .attr("fill", "#60a5fa")
+        .attr("fill", "#6fa8d0")
         .attr("font-size", "0.95rem")
         .attr("font-weight", "600");
       svg
         .append("text")
         .attr("class", "rel-lbl-m")
-        .attr("fill", "#fbbf24")
+        .attr("fill", "#e8a33d")
         .attr("font-size", "0.95rem")
         .attr("font-weight", "600");
       svg
         .append("text")
         .attr("class", "rel-lbl-d")
-        .attr("fill", "#34d399")
+        .attr("fill", "#6cc0a0")
         .attr("font-size", "1rem")
         .attr("font-weight", "700")
         .attr("text-anchor", "middle");

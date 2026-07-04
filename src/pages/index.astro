@@ -3,59 +3,105 @@ import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
-import LinkButton from "@/components/LinkButton.astro";
-import Card from "@/components/Card.astro";
-import Hr from "@/components/Hr.astro";
+import PostRow from "@/components/PostRow.astro";
 import getSortedPosts from "@/utils/getSortedPosts";
-import IconArrowRight from "@/assets/icons/IconArrowRight.svg";
-import { SITE } from "@/config";
+import getPostsByGroupCondition from "@/utils/getPostsByGroupCondition";
 
 const posts = await getCollection("blog");
-
 const sortedPosts = getSortedPosts(posts);
-const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
-const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
+const total = sortedPosts.length;
+
+const postsByYear = getPostsByGroupCondition(sortedPosts, post =>
+  post.data.pubDatetime.getFullYear()
+);
+const years = Object.keys(postsByYear)
+  .map(Number)
+  .sort((a, b) => b - a);
 ---
 
 <Layout>
   <Header />
-  <main id="main-content" data-layout="index">
-    {
-      recentPosts.length > 0 && (
-        <section id="recent-posts" class="pt-12 pb-6">
-          <h2 class="text-2xl font-semibold tracking-wide">Recent Posts</h2>
-          <ul>
-            {recentPosts.map(
-              (data, index) =>
-                index < SITE.postPerIndex && <Card variant="h3" {...data} />
-            )}
-          </ul>
-        </section>
-      )
-    }
-
-    {
-      featuredPosts.length > 0 && (
-        <>
-          <section id="featured" class="pt-12 pb-6">
-            <h2 class="text-2xl font-semibold tracking-wide">Featured</h2>
-            <ul>
-              {featuredPosts.map(data => (
-                <Card variant="h3" {...data} />
-              ))}
-            </ul>
-          </section>
-          {recentPosts.length > 0 && <Hr />}
-        </>
-      )
-    }
-
-    <div class="my-8 text-center">
-      <LinkButton href="/posts/">
-        All Posts
-        <IconArrowRight class="inline-block" />
-      </LinkButton>
+  <main id="main-content" class="posts-main">
+    <div class="posts-head">
+      <h1 class="posts-title">Posts</h1>
+      <span class="posts-count">
+        {total} {total === 1 ? "ENTRY" : "ENTRIES"}
+      </span>
     </div>
+
+    {
+      years.map(year => (
+        <div class="year-group">
+          <div class="year-head">
+            <span class="year-chip bevel-raised">{year}</span>
+            <span class="year-rule" aria-hidden="true" />
+          </div>
+          <ul class="post-list">
+            {postsByYear[year].map(post => (
+              <PostRow post={post} />
+            ))}
+          </ul>
+        </div>
+      ))
+    }
   </main>
   <Footer />
 </Layout>
+
+<style>
+  .posts-main {
+    width: 100%;
+    max-width: 884px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  .posts-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .posts-title {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--text-strong);
+    margin: 0;
+  }
+  .posts-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .year-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 32px 0 8px;
+  }
+  .year-chip {
+    background: var(--accent);
+    color: var(--bg);
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    padding: 2px 9px;
+  }
+  .year-rule {
+    flex: 1;
+    border-top: 1px dotted var(--divider);
+  }
+  .post-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  @media (max-width: 700px) {
+    .posts-main {
+      padding: 40px 16px 72px;
+    }
+  }
+</style>

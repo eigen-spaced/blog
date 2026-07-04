@@ -3,45 +3,63 @@
 @import "tailwindcss";
 @import "./typography.css";
 
+/* Dark is the only theme now, but keep the variant defined so any residual
+   `dark:` utilities still compile (they always resolve, since data-theme is
+   hard-set to "dark" on <html>). */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
-:root,
-html[data-theme="light"] {
-  --background: #fdfdfd;
-  --foreground: #282728;
-  --accent: #006cac;
-  --muted: #e6e6e6;
-  --border: #ece9e9;
-}
+:root {
+  /* ===== Point In Space — warm-espresso dark palette ===== */
+  --bg: #1f1b17; /* page background (warm espresso, not pure black) */
+  --surface: #26211c; /* panels: ToC, note cards, equation block */
+  --surface-raised: #28231e; /* header & footer bars */
+  --surface-btn: #332c25; /* nav buttons (rest) */
+  --surface-btn-hover: #3c342b; /* nav buttons (hover) */
+  --titlebar-from: #3a322a; /* panel title-bar gradient top */
+  --titlebar-to: #2d2721; /* panel title-bar gradient bottom */
+  --line: #0e0c0a; /* hard 1px borders / bevel shadow line */
+  --divider: #4a4038; /* dotted dividers, muted swatches */
+  --accent: #a8c686; /* sage green — links, active states, markers */
+  --text: #e9e0d0; /* default body chrome text */
+  --text-strong: #f2ead9; /* headings */
+  --text-body: #ddd2bd; /* article paragraph text */
+  --text-muted: #8a7d66; /* metadata, mono labels */
+  --text-note: #c8bda6; /* margin-note body text */
+  --text-nav: #cfc4ae; /* nav button labels */
+  --text-toc: #b7a98d; /* ToC sub-items / mono captions */
 
-html[data-theme="dark"] {
-  --background: #1b1f29;
-  --foreground: #f1f0eb;
-  --accent: #f0b429;
-  --muted: #8a94a6;
-  --border: #444b5a;
+  /* Legacy aliases so pre-existing Tailwind utilities/components keep working */
+  --background: var(--bg);
+  --foreground: var(--text);
+  --muted: var(--divider);
+  --border: var(--line);
 }
 
 @theme inline {
-  --font-serif: var(--font-custom);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --font-serif: var(--font-source-serif), ui-serif, Georgia, serif;
+  --font-mono: var(--font-plex-mono), ui-monospace, "SFMono-Regular", monospace;
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --color-accent: var(--accent);
-  --color-muted: var(--muted);
-  --color-border: var(--border);
+  --color-muted: var(--divider);
+  --color-border: var(--line);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
 }
 
 @layer base {
   * {
     @apply border-border outline-accent/75;
     scrollbar-width: auto;
-    scrollbar-color: var(--color-muted) transparent;
+    scrollbar-color: var(--divider) transparent;
   }
   html {
     @apply overflow-y-scroll scroll-smooth;
+    background-color: var(--bg);
   }
   body {
-    @apply flex min-h-svh flex-col bg-background font-serif text-foreground selection:bg-accent/75 selection:text-background;
+    @apply flex min-h-svh flex-col bg-background font-serif selection:bg-accent selection:text-background;
+    color: var(--text-body);
   }
   a,
   button {
@@ -51,8 +69,10 @@ html[data-theme="dark"] {
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
-  section,
-  footer {
+  /* Content pages (about, tags, search, 404…) stay centered & padded.
+     Full-bleed chrome (header/footer) and the wide post grid opt out by
+     not using a bare <section>. */
+  section {
     @apply mx-auto max-w-3xl px-4;
   }
 }
@@ -61,26 +81,61 @@ html[data-theme="dark"] {
   @apply max-w-3xl;
 }
 
-.active-nav {
-  @apply underline decoration-2 underline-offset-4;
+/* ===== y2k bevel system (spec §"The y2k bevel system") ===== */
+.bevel-raised {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow:
+    inset -1px -1px 0 rgba(0, 0, 0, 0.4),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.45);
+}
+.bevel-raised:active,
+.bevel-raised[data-pressed="true"] {
+  box-shadow: inset 1px 1px 0 rgba(0, 0, 0, 0.4);
+}
+.bevel-panel {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+    3px 3px 0 rgba(0, 0, 0, 0.35);
+}
+.bevel-inset {
+  border: 1px solid var(--line);
+  border-radius: 0;
+  box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.07);
+}
+.bar-shine {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.titlebar {
+  background: linear-gradient(180deg, var(--titlebar-from), var(--titlebar-to));
+  border-bottom: 1px solid var(--line);
+}
+/* 8px square "window" dots used on panel title bars */
+.win-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border: 1px solid var(--line);
+}
+.win-dot--muted {
+  background: var(--divider);
+}
+.win-dot--accent {
+  background: var(--accent);
 }
 
-/* Source: https://piccalil.li/blog/a-more-modern-css-reset/ */
-/* Anything that has been anchored to should have extra scroll margin */
+/* Mono chrome label: uppercased, tracked-out IBM Plex Mono */
+.mono-label {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* Anything anchored to clears the sticky header (76px) plus breathing room */
 :target {
-  scroll-margin-block: 1rem;
+  scroll-margin-block: 6rem;
 }
 
-/* Resume styles only */
-.tech-stack-item {
-@apply inline-flex content-center justify-between gap-2 border-2 p-2 text-center;
-}
-.two-col-stack {
-  @apply block sm:flex sm:justify-between sm:gap-4 mb-5;
-}
-.primary-content {
-  @apply flex-1 min-w-0;
-}
-.secondary-content {
-  @apply shrink-0 mt-1 sm:mt-0 sm:text-right;
-}

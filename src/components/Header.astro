@@ -1,173 +1,215 @@
 ---
-import Hr from "./Hr.astro";
 import IconX from "@/assets/icons/IconX.svg";
-import IconMoon from "@/assets/icons/IconMoon.svg";
-import IconSearch from "@/assets/icons/IconSearch.svg";
-import IconArchive from "@/assets/icons/IconArchive.svg";
-import IconSunHigh from "@/assets/icons/IconSunHigh.svg";
 import IconMenuDeep from "@/assets/icons/IconMenuDeep.svg";
-import LinkButton from "./LinkButton.astro";
 import { SITE } from "@/config";
 
 const { pathname } = Astro.url;
-
-// Remove trailing slash from current pathname if exists
 const currentPath =
   pathname.endsWith("/") && pathname !== "/" ? pathname.slice(0, -1) : pathname;
 
-const isActive = (path: string) => {
-  const currentPathArray = currentPath.split("/").filter(p => p.trim());
-  const pathArray = path.split("/").filter(p => p.trim());
-
-  return currentPath === path || currentPathArray[0] === pathArray[0];
-};
+// "Posts" owns the landing list ("/") and every post page ("/posts/…").
+const postsActive = currentPath === "/" || currentPath.startsWith("/posts");
+const isSection = (base: string) => currentPath.startsWith(base);
 ---
 
-<header>
-  <a
-    id="skip-to-content"
-    href="#main-content"
-    class="absolute -top-full left-16 z-50 bg-background px-3 py-2 text-accent backdrop-blur-lg transition-all focus:top-4"
-  >
-    Skip to content
-  </a>
-  <div
-    id="nav-container"
-    class="mx-auto flex max-w-3xl flex-col items-center justify-between sm:flex-row"
-  >
-    <div
-      id="top-nav-wrap"
-      class="relative flex w-full items-baseline justify-between bg-background p-4 sm:items-center sm:py-6"
-    >
-      <a
-        href="/"
-        class="absolute py-1 text-2xl leading-7 font-semibold whitespace-nowrap sm:static"
+<header class="site-header bar-shine">
+  <a id="skip-to-content" href="#main-content">Skip to content</a>
+  <div class="header-inner">
+    <a href="/" class="brand" aria-label={`${SITE.title} — home`}>
+      <span class="logo-mark bevel-raised" aria-hidden="true"></span>
+      <span class="brand-name">{SITE.title}</span>
+    </a>
+    <nav class="nav" aria-label="Primary">
+      <button
+        id="menu-btn"
+        class="menu-btn bevel-raised"
+        aria-label="Open Menu"
+        aria-expanded="false"
+        aria-controls="menu-items"
       >
-        {SITE.title}
-      </a>
-      <nav
-        id="nav-menu"
-        class="flex w-full flex-col items-center sm:ml-2 sm:flex-row sm:justify-end sm:space-x-4 sm:py-0"
-      >
-        <button
-          id="menu-btn"
-          class="focus-outline self-end p-2 sm:hidden"
-          aria-label="Open Menu"
-          aria-expanded="false"
-          aria-controls="menu-items"
-        >
-          <IconX id="close-icon" class="hidden" />
-          <IconMenuDeep id="menu-icon" />
-        </button>
-        <ul
-          id="menu-items"
-          class:list={[
-            "mt-4 grid w-44 grid-cols-2 place-content-center gap-2",
-            "[&>li>a]:block [&>li>a]:px-4 [&>li>a]:py-3 [&>li>a]:text-center [&>li>a]:font-medium [&>li>a]:hover:text-accent sm:[&>li>a]:px-2 sm:[&>li>a]:py-1",
-            "hidden",
-            "sm:mt-0 sm:ml-0 sm:flex sm:w-auto sm:gap-x-5 sm:gap-y-0",
-          ]}
-        >
-          <li class="col-span-2">
-            <a href="/posts" class:list={{ "active-nav": isActive("/posts") }}>
-              Posts
-            </a>
-          </li>
-          <li class="col-span-2">
-            <a href="/tags" class:list={{ "active-nav": isActive("/tags") }}>
-              Tags
-            </a>
-          </li>
-          <li class="col-span-2">
-            <a href="/vibes" class:list={{ "active-nav": isActive("/vibes") }}>
-              Vibes
-            </a>
-          </li>
-          <li class="col-span-2">
-            <a href="/about" class:list={{ "active-nav": isActive("/about") }}>
-              About
-            </a>
-          </li>
-          {
-            SITE.showArchives && (
-              <li class="col-span-2">
-                <LinkButton
-                  href="/archives"
-                  class:list={[
-                    "focus-outline flex justify-center p-3 sm:p-1",
-                    {
-                      "active-nav [&>svg]:stroke-accent": isActive("/archives"),
-                    },
-                  ]}
-                  ariaLabel="archives"
-                  title="Archives"
-                >
-                  <IconArchive class="hidden sm:inline-block" />
-                  <span class="sm:sr-only">Archives</span>
-                </LinkButton>
-              </li>
-            )
-          }
-          <li class="col-span-1 flex items-center justify-center">
-            <LinkButton
-              href="/search"
-              class:list={[
-                "focus-outline flex p-3 sm:p-1",
-                { "[&>svg]:stroke-accent": isActive("/search") },
-              ]}
-              ariaLabel="search"
-              title="Search"
-            >
-              <IconSearch />
-              <span class="sr-only">Search</span>
-            </LinkButton>
-          </li>
-          {
-            SITE.lightAndDarkMode && (
-              <li class="col-span-1 flex items-center justify-center">
-                <button
-                  id="theme-btn"
-                  class="focus-outline relative size-12 p-4 sm:size-8 hover:[&>svg]:stroke-accent"
-                  title="Toggles light & dark"
-                  aria-label="auto"
-                  aria-live="polite"
-                >
-                  <IconMoon class="absolute top-[50%] left-[50%] -translate-[50%] scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-                  <IconSunHigh class="absolute top-[50%] left-[50%] -translate-[50%] scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-                </button>
-              </li>
-            )
-          }
-        </ul>
-      </nav>
-    </div>
+        <IconX id="close-icon" class="hidden" />
+        <IconMenuDeep id="menu-icon" />
+      </button>
+      <ul id="menu-items" class="nav-list" data-open="false">
+        <li>
+          <a href="/" class="nav-btn bevel-raised" data-active={postsActive}>
+            Posts
+          </a>
+        </li>
+        <li>
+          <a
+            href="/tags"
+            class="nav-btn bevel-raised"
+            data-active={isSection("/tags")}
+          >
+            Tags
+          </a>
+        </li>
+        <li>
+          <a
+            href="/vibes"
+            class="nav-btn bevel-raised"
+            data-active={isSection("/vibes")}
+          >
+            Vibes
+          </a>
+        </li>
+        <li>
+          <a
+            href="/about"
+            class="nav-btn bevel-raised"
+            data-active={isSection("/about")}
+          >
+            About
+          </a>
+        </li>
+      </ul>
+    </nav>
   </div>
-  <Hr />
 </header>
 
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    width: 100%;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--line);
+  }
+  #skip-to-content {
+    position: absolute;
+    top: -100%;
+    left: 4rem;
+    z-index: 60;
+    background: var(--surface);
+    color: var(--accent);
+    padding: 0.5rem 0.75rem;
+    transition: top 0.2s;
+  }
+  #skip-to-content:focus {
+    top: 0.75rem;
+  }
+  .header-inner {
+    max-width: 1360px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 32px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 14px;
+    height: 14px;
+    background: var(--accent);
+    flex: none;
+  }
+  .brand-name {
+    font-family: system-ui, -apple-system, sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--text-strong);
+    white-space: nowrap;
+  }
+  .nav {
+    position: relative;
+  }
+  .nav-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .nav-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-nav);
+    background: var(--surface-btn);
+    padding: 6px 14px;
+    text-decoration: none;
+  }
+  .nav-btn:hover {
+    background: var(--surface-btn-hover);
+  }
+  .nav-btn[data-active="true"] {
+    background: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+  .menu-btn {
+    display: none;
+    background: var(--surface-btn);
+    color: var(--text-nav);
+    padding: 8px;
+  }
+  .hidden {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .header-inner {
+      padding: 10px 16px;
+    }
+    .menu-btn {
+      display: inline-flex;
+    }
+    .nav-list {
+      display: none;
+      position: absolute;
+      right: 0;
+      top: calc(100% + 10px);
+      flex-direction: column;
+      align-items: stretch;
+      gap: 6px;
+      min-width: 168px;
+      padding: 8px;
+      background: var(--surface-raised);
+      border: 1px solid var(--line);
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.35);
+      z-index: 60;
+    }
+    .nav-list[data-open="true"] {
+      display: flex;
+    }
+    .nav-btn {
+      justify-content: flex-start;
+      padding: 10px 14px;
+    }
+  }
+</style>
+
 <script>
-  function toggleNav() {
+  function bindNav() {
     const menuBtn = document.querySelector("#menu-btn");
     const menuItems = document.querySelector("#menu-items");
     const menuIcon = document.querySelector("#menu-icon");
     const closeIcon = document.querySelector("#close-icon");
-
     if (!menuBtn || !menuItems || !menuIcon || !closeIcon) return;
 
     menuBtn.addEventListener("click", () => {
-      const openMenu = menuBtn.getAttribute("aria-expanded") === "true";
-
-      menuBtn.setAttribute("aria-expanded", openMenu ? "false" : "true");
-      menuBtn.setAttribute("aria-label", openMenu ? "Open Menu" : "Close Menu");
-
-      menuItems.classList.toggle("hidden");
+      const open = menuBtn.getAttribute("aria-expanded") === "true";
+      menuBtn.setAttribute("aria-expanded", open ? "false" : "true");
+      menuBtn.setAttribute("aria-label", open ? "Open Menu" : "Close Menu");
+      menuItems.setAttribute("data-open", open ? "false" : "true");
       menuIcon.classList.toggle("hidden");
       closeIcon.classList.toggle("hidden");
     });
   }
 
-  toggleNav();
-
-  // Runs on view transitions navigation
-  document.addEventListener("astro:after-swap", toggleNav);
+  bindNav();
+  document.addEventListener("astro:after-swap", bindNav);
 </script>

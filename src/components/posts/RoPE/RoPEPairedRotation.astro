@@ -2,19 +2,19 @@
 /** RoPE Paired Rotation — one 64-dim embedding rotated to two positions. Q is that embedding rotated to m_A=2 (outline bars, frozen); K is the same embedding rotated to m_B (filled bars, slider-driven). At m_B = m_A the two coincide; slide K away to watch fast pairs swing out of their Q outlines while slow pairs barely move. */
 ---
 
-<div class="mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5">
+<div class="mb-4 rounded-none border border-[#0e0c0a] bg-[#221d17] p-5 shadow-[3px_3px_0_rgba(0,0,0,0.35)]">
   <div class="mb-3">
     <label
-      class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-gray-400 uppercase"
+      class="mb-1 block text-[0.85rem] font-semibold tracking-wider text-[#8a7d66] uppercase"
       for="pr-mb-slider"
     >
       Token B position (m<sub>B</sub>) = <span
-        class="text-gray-200"
+        class="text-[#e9e0d0]"
         id="pr-mb-val">2</span
       >
-      <span class="mx-2 text-gray-500">·</span>
+      <span class="mx-2 text-[#8a7d66]">·</span>
       relative distance = <span
-        class="font-semibold text-emerald-400"
+        class="font-semibold text-[#6cc0a0]"
         id="pr-d-val">0</span
       >
     </label>
@@ -24,19 +24,19 @@
       min="2"
       max="130"
       value="2"
-      class="w-full accent-indigo-400"
+      class="w-full accent-amber-400"
     />
   </div>
 
   <div
-    class="mt-2 mb-1 flex flex-wrap items-center gap-5 text-[0.85rem] text-slate-300"
+    class="mt-2 mb-1 flex flex-wrap items-center gap-5 text-[0.85rem] text-[#c8bda6]"
   >
     <span class="inline-flex items-center gap-2">
-      <span class="inline-block h-3 w-3 border-[1.5px] border-slate-300"></span>
+      <span class="inline-block h-3 w-3 border-[1.5px] border-[#c8bda6]"></span>
       Query (Fixed)
     </span>
     <span class="inline-flex items-center gap-2">
-      <span class="inline-block h-3 w-3 bg-slate-300"></span>
+      <span class="inline-block h-3 w-3 bg-[#c8bda6]"></span>
       Key (Variable)
     </span>
   </div>
@@ -57,9 +57,9 @@
   // Color spectrum: orange (fast pairs) → emerald (slow pairs)
   const colorOf = d3.interpolateRgbBasis([
     "#fb923c",
-    "#facc15",
-    "#a3e635",
-    "#34d399",
+    "#e8a33d",
+    "#b7c96a",
+    "#6cc0a0",
   ]);
   const pairColor = (k: number) => colorOf(k / (NUM_PAIRS - 1));
 
@@ -120,7 +120,7 @@
     .call(d3.axisLeft(y).ticks(3).tickSize(0).tickPadding(4))
     .call(g => g.select(".domain").remove())
     .call(g =>
-      g.selectAll("text").attr("fill", "#9ca3af").style("font-size", "0.75rem")
+      g.selectAll("text").attr("fill", "#8a7d66").style("font-size", "0.75rem")
     );
 
   // K filled bars first (so they sit behind Q's outline)
@@ -156,7 +156,7 @@
       .attr("x", x(String(i))! + x.bandwidth())
       .attr("y", innerH + 14)
       .attr("text-anchor", "middle")
-      .attr("fill", "#9ca3af")
+      .attr("fill", "#8a7d66")
       .attr("font-size", "0.7rem")
       .text(`k=${k}`);
   });

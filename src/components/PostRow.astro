@@ -1,0 +1,85 @@
+---
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import type { CollectionEntry } from "astro:content";
+import { getPath } from "@/utils/getPath";
+import { SITE } from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { title, description, pubDatetime, timezone: postTimezone } = post.data;
+const href = getPath(post.id, post.filePath);
+
+const dt = dayjs(pubDatetime).tz(postTimezone || SITE.timezone);
+const day = dt.format("D");
+const month = dt.format("MMM").toUpperCase();
+---
+
+<li class="post-row">
+  <a href={href} class="post-row-link">
+    <span class="post-date">
+      <time datetime={dt.toISOString()}>{day} {month}</time>
+    </span>
+    <span class="post-title">{title}</span>
+    <span class="post-desc">{description}</span>
+  </a>
+</li>
+
+<style>
+  .post-row {
+    list-style: none;
+  }
+  .post-row-link {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    align-items: baseline;
+    gap: 24px;
+    padding: 11px 12px;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+  .post-row-link:hover {
+    background: var(--surface);
+    border-color: var(--line);
+  }
+  .post-date {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+  .post-title {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    font-size: 17px;
+    line-height: 1.35;
+    color: var(--accent);
+  }
+  .post-desc {
+    font-family: var(--font-serif);
+    font-size: 15px;
+    color: var(--text-muted);
+    text-align: right;
+  }
+
+  @media (max-width: 700px) {
+    .post-row-link {
+      grid-template-columns: 52px 1fr;
+      gap: 6px 16px;
+      row-gap: 2px;
+    }
+    .post-desc {
+      grid-column: 2 / -1;
+      text-align: left;
+      font-size: 14px;
+    }
+  }
+</style>

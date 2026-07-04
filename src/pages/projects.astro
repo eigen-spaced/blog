@@ -1,0 +1,366 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { Image } from "astro:assets";
+import { SITE } from "@/config";
+
+import croc from "@/assets/projects/Croc.svg";
+import koala from "@/assets/projects/Koala.svg";
+import kangaroo from "@/assets/projects/Kangaroo.svg";
+import quokka from "@/assets/projects/Quokka.svg";
+import spider from "@/assets/projects/Spider.svg";
+
+import race from "@/assets/projects/great sushi race.gif";
+import seeminglyRandom1 from "@/assets/projects/screenshots/seemingly-random-screen-1.png";
+import seeminglyRandom2 from "@/assets/projects/screenshots/seemingly-random-screen-2.png";
+
+const projects = [
+  {
+    label: "PROJECT.01",
+    title: "The Great Sushi Race",
+    tech: ["Next.js", "MongoDB", "Zustand", "Pixi.js"],
+    sprites: [
+      { src: croc, alt: "croc" },
+      { src: koala, alt: "koala" },
+      { src: kangaroo, alt: "kangaroo" },
+      { src: spider, alt: "spider" },
+      { src: quokka, alt: "quokka" },
+    ],
+    media: [{ src: race, alt: "The Great Sushi Race" }],
+    links: [
+      { label: "Source", href: "https://github.com/eigen-spaced/team-board-update" },
+    ],
+    notes: [
+      "The weekly meetings at one of my previous companies relied on traditional charts and spreadsheets to communicate quarterly revenue performance across sectors, making it difficult for teams to quickly grasp their progress relative to goals.",
+      "I designed an interactive dashboard that visualized sector performance as a race between Australian animals, where each animal's position represented how close that sector was to hitting quarterly targets. This transformed dry financial reporting into an engaging visual that made performance gaps immediately apparent to leadership and motivated teams through friendly competition.",
+    ],
+    highlight:
+      "Large-scale React architecture, real-time data visualization with Pixi.js, optimized state management for smooth animations.",
+  },
+  {
+    label: "PROJECT.02",
+    title: "Statistical Pairwise Comparison Ranker",
+    tech: ["Vue", "Nuxt", "PostgreSQL", "Vercel"],
+    sprites: [],
+    media: [
+      { src: seeminglyRandom1, alt: "Seemingly random screen 1" },
+      { src: seeminglyRandom2, alt: "Seemingly random screen 2" },
+    ],
+    links: [
+      { label: "Live Deployment", href: "https://seemingly-random.vercel.app/" },
+      { label: "Source", href: "https://github.com/eigen-spaced/seemingly-random" },
+    ],
+    notes: [
+      'Most ranking systems break down when comparing fundamentally different categories—how do you fairly rank Batman against a Toyota Corolla? I built an application that uses ELO rating algorithms to handle these "apples to oranges" comparisons, revealing unexpected patterns in human preference hierarchies.',
+      "The system generates a dynamic network graph showing relationship clusters between unlikely items (Nicolas Cage cardboard cutouts vs. wet socks vs. the Ghostbusters film), creating a visual map of how people actually make irrational comparison decisions. This exploration into comparative psychology demonstrates how statistical models can extract meaningful insights from seemingly nonsensical data.",
+    ],
+    highlight:
+      "ELO rating implementation, dynamic graph visualization, statistical analysis of irrational decision patterns.",
+  },
+];
+
+const total = projects.length;
+---
+
+<Layout title={`Projects | ${SITE.title}`}>
+  <Header />
+  <main id="main-content" class="projects-main">
+    <a href="/about" class="back-link">&lt;- cd ../about</a>
+    <div class="projects-head">
+      <h1 class="projects-title">Projects</h1>
+      <span class="projects-count">
+        {total} {total === 1 ? "BUILD" : "BUILDS"}
+      </span>
+    </div>
+    <p class="projects-intro">A few things I've designed, built, and shipped.</p>
+    <div class="projects-rule" aria-hidden="true"></div>
+
+    <div class="project-list">
+      {
+        projects.map(project => (
+          <article class="project-card bevel-panel">
+            <div class="project-titlebar titlebar">
+              <span class="win-dot win-dot--accent" aria-hidden="true" />
+              <span class="win-dot win-dot--muted" aria-hidden="true" />
+              <span class="project-tb-label">{project.label}</span>
+            </div>
+
+            <div class="project-body">
+              <h2 class="project-title">{project.title}</h2>
+
+              <ul class="project-tech">
+                {project.tech.map(t => (
+                  <li class="tech-chip">{t}</li>
+                ))}
+              </ul>
+
+              {project.sprites.length > 0 && (
+                <div class="project-sprites">
+                  {project.sprites.map(s => (
+                    <Image src={s.src} alt={s.alt} class="sprite" />
+                  ))}
+                </div>
+              )}
+
+              <div
+                class:list={[
+                  "project-gallery",
+                  project.media.length === 1 && "project-gallery--single",
+                ]}
+              >
+                {project.media.map(m => (
+                  <figure class="project-frame bevel-inset">
+                    <Image src={m.src} alt={m.alt} />
+                  </figure>
+                ))}
+              </div>
+
+              <div class="project-links">
+                {project.links.map(l => (
+                  <a
+                    href={l.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="project-link bevel-raised"
+                  >
+                    {l.label} <span aria-hidden="true">↗</span>
+                  </a>
+                ))}
+              </div>
+
+              <ul class="project-notes">
+                {project.notes.map(n => (
+                  <li>{n}</li>
+                ))}
+              </ul>
+
+              <div class="project-highlight bevel-inset">
+                <span class="mono-label">Technical highlights</span>
+                <p>{project.highlight}</p>
+              </div>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </main>
+  <Footer />
+</Layout>
+
+<style>
+  .projects-main {
+    width: 100%;
+    max-width: 884px;
+    margin: 0 auto;
+    padding: 56px 32px 96px;
+  }
+  .back-link {
+    display: inline-block;
+    margin-bottom: 18px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+  .back-link:hover {
+    color: var(--accent);
+  }
+  .projects-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .projects-title {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+  .projects-count {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .projects-intro {
+    margin: 6px 0 0;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+  .projects-rule {
+    margin: 20px 0 28px;
+    border-top: 1px dotted var(--divider);
+  }
+
+  .project-list {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .project-card {
+    background: var(--surface);
+    overflow: hidden;
+  }
+  .project-titlebar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 12px;
+  }
+  .project-tb-label {
+    margin-left: 4px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-toc);
+  }
+  .project-body {
+    padding: 22px 24px 26px;
+  }
+  .project-title {
+    margin: 0 0 12px;
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-strong);
+  }
+
+  .project-tech {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 18px;
+    padding: 0;
+    list-style: none;
+  }
+  .tech-chip {
+    padding: 2px 9px;
+    background: var(--surface-btn);
+    border: 1px solid var(--line);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.02em;
+    color: var(--text-nav);
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .project-sprites {
+    display: flex;
+    align-items: flex-end;
+    gap: 22px;
+    margin-bottom: 18px;
+    padding: 6px 2px;
+  }
+  .project-sprites :global(img) {
+    width: 54px;
+    height: auto;
+  }
+
+  .project-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+  .project-frame {
+    flex: 1 1 240px;
+    margin: 0;
+    padding: 5px;
+    background: var(--bg);
+    line-height: 0;
+    overflow: hidden;
+  }
+  .project-gallery--single .project-frame {
+    flex-basis: 100%;
+  }
+  .project-frame :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+  .project-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 13px;
+    background: var(--surface-btn);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .project-link:hover {
+    background: var(--surface-btn-hover);
+  }
+
+  .project-notes {
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+  }
+  .project-notes li {
+    position: relative;
+    margin-bottom: 12px;
+    padding-left: 20px;
+    font-family: var(--font-serif);
+    font-size: 15.5px;
+    line-height: 1.65;
+    color: var(--text-body);
+  }
+  .project-notes li::before {
+    content: "";
+    position: absolute;
+    top: 9px;
+    left: 2px;
+    width: 6px;
+    height: 6px;
+    background: var(--accent);
+  }
+
+  .project-highlight {
+    padding: 14px 16px;
+    background: var(--bg);
+  }
+  .project-highlight .mono-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  .project-highlight p {
+    margin: 0;
+    font-family: var(--font-serif);
+    font-style: italic;
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--text-note);
+  }
+
+  @media (max-width: 700px) {
+    .projects-main {
+      padding: 40px 16px 72px;
+    }
+    .project-body {
+      padding: 18px 16px 20px;
+    }
+    .project-sprites {
+      gap: 14px;
+    }
+    .project-sprites :global(img) {
+      width: 44px;
+    }
+  }
+</style>

@@ -1,18 +1,22 @@
 ---
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import { render, type CollectionEntry } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import Header from "@/components/Header.astro";
 import Footer from "@/components/Footer.astro";
+import Toc from "@/components/Toc.astro";
+import MarginNotes from "@/components/MarginNotes.astro";
 import Tag from "@/components/Tag.astro";
-import Datetime from "@/components/Datetime.astro";
-import EditPost from "@/components/EditPost.astro";
-import ShareLinks from "@/components/ShareLinks.astro";
-import BackButton from "@/components/BackButton.astro";
 import { getPath } from "@/utils/getPath";
 import { slugifyStr } from "@/utils/slugify";
 import IconChevronLeft from "@/assets/icons/IconChevronLeft.svg";
 import IconChevronRight from "@/assets/icons/IconChevronRight.svg";
 import { SITE } from "@/config";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export interface Props {
   post: CollectionEntry<"blog">;
@@ -29,28 +33,43 @@ const {
   canonicalURL,
   pubDatetime,
   modDatetime,
-  timezone,
+  timezone: postTimezone,
   tags,
-  hideEditPost,
 } = post.data;
 
-const { Content } = await render(post);
+const { Content, headings, remarkPluginFrontmatter } = await render(post);
 
+const minutesRead: number = remarkPluginFrontmatter?.minutesRead ?? 1;
+const footnoteCount: number = remarkPluginFrontmatter?.footnotes ?? 0;
+
+/* ===== Table of contents from post headings (# = section, ## = sub) ===== */
+// Drop the GFM-injected "Footnotes" heading — its content lives in the rail.
+const contentHeadings = headings.filter(h => h.slug !== "footnote-label");
+const depths = contentHeadings.map(h => h.depth);
+const minDepth = depths.length ? Math.min(...depths) : 1;
+const tocHeadings = contentHeadings
+  .filter(h => h.depth <= minDepth + 1)
+  .map(h => ({ slug: h.slug, text: h.text, sub: h.depth > minDepth }));
+const hasToc = tocHeadings.length > 0;
+const hasNotes = footnoteCount > 0;
+
+/* ===== Meta row ===== */
+const metaDate = dayjs(pubDatetime)
+  .tz(postTimezone || SITE.timezone)
+  .format("D MMM YYYY")
+  .toUpperCase();
+const metaTags = tags.join(" · ").toUpperCase();
+
+/* ===== OG image resolution (unchanged) ===== */
 let ogImageUrl: string | undefined;
-
-// Determine OG image source
 if (typeof initOgImage === "string") {
-  ogImageUrl = initOgImage; // Remote OG image (absolute URL)
+  ogImageUrl = initOgImage;
 } else if (initOgImage?.src) {
-  ogImageUrl = initOgImage.src; // Local asset
+  ogImageUrl = initOgImage.src;
 }
-
-// Use dynamic OG image if enabled and no remote|local ogImage
 if (!ogImageUrl && SITE.dynamicOgImage) {
   ogImageUrl = `${getPath(post.id, post.filePath)}/index.png`;
 }
-
-// Resolve OG image URL (or fallback to SITE.ogImage / default `og.png`)
 const ogImage = ogImageUrl
   ? new URL(ogImageUrl, Astro.url.origin).href
   : undefined;
@@ -66,15 +85,9 @@ const layoutProps = {
   scrollSmooth: true,
 };
 
-/* ========== Prev/Next Posts ========== */
-
-const allPosts = posts.map(({ data: { title }, id }) => ({
-  slug: id,
-  title,
-}));
-
+/* ===== Prev/Next ===== */
+const allPosts = posts.map(({ data: { title }, id }) => ({ slug: id, title }));
 const currentPostIndex = allPosts.findIndex(a => a.slug === post.id);
-
 const prevPost = currentPostIndex !== 0 ? allPosts[currentPostIndex - 1] : null;
 const nextPost =
   currentPostIndex !== allPosts.length ? allPosts[currentPostIndex + 1] : null;
@@ -82,209 +95,414 @@ const nextPost =
 
 <Layout {...layoutProps}>
   <Header />
-  <BackButton />
-  <main
-    id="main-content"
-    class:list={[
-      "mx-auto w-full max-w-3xl px-4 pb-12",
-      { "mt-8": !SITE.showBackButton },
-    ]}
-    data-pagefind-body
+  <div
+    class="post-wrap"
+    data-toc={String(hasToc)}
+    data-notes={String(hasNotes)}
   >
-    <h1
-      transition:name={slugifyStr(title)}
-      class="inline-block text-2xl font-bold text-accent sm:text-3xl"
-    >
-      {title}
-    </h1>
-    <div class="flex items-center gap-4">
-      <Datetime {pubDatetime} {modDatetime} {timezone} size="lg" class="my-2" />
-      <EditPost class="max-sm:hidden" {hideEditPost} {post} />
-    </div>
-    <article
-      id="article"
-      class="app-prose mx-auto mt-8 max-w-app prose-pre:bg-(--shiki-light-bg) dark:prose-pre:bg-(--shiki-dark-bg)"
-    >
-      <Content />
-    </article>
+    {
+      hasToc && (
+        <aside class="post-col post-aside-left">
+          <Toc headings={tocHeadings} minutesRead={minutesRead} />
+        </aside>
+      )
+    }
 
-    <hr class="my-8 border-dashed" />
+    <main id="main-content" class="post-col post-main">
+      <a href="/" class="back-link">&lt;- cd ../posts</a>
+      <h1 transition:name={slugifyStr(title)} class="post-title">{title}</h1>
+      <div class="post-meta">
+        <span class="meta-date">{metaDate}</span>
+        {metaTags && <span class="meta-dot" aria-hidden="true" />}
+        {metaTags && <span class="meta-tags">{metaTags}</span>}
+      </div>
 
-    <EditPost class="sm:hidden" {hideEditPost} {post} />
+      <article id="article" class="app-prose max-w-none">
+        <Content />
+      </article>
 
-    <ul class="mt-4 mb-8 sm:my-8">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} />)}
-    </ul>
+      <div class="post-foot">
+        <ul class="post-tags">
+          {tags.map(tag => <Tag tag={slugifyStr(tag)} tagName={tag} />)}
+        </ul>
 
-    <div
-      class="flex flex-col items-center justify-between gap-6 sm:flex-row sm:items-end sm:gap-4"
-    >
-      <ShareLinks />
+        <nav class="post-nav" aria-label="Adjacent posts">
+          {
+            prevPost && (
+              <a href={`/posts/${prevPost.slug}`} class="post-nav-link prev">
+                <IconChevronLeft class="inline-block flex-none" />
+                <span>
+                  <span class="post-nav-label">Previous</span>
+                  <span class="post-nav-title">{prevPost.title}</span>
+                </span>
+              </a>
+            )
+          }
+          {
+            nextPost && (
+              <a
+                href={`/posts/${nextPost.slug}`}
+                class="post-nav-link next"
+              >
+                <span>
+                  <span class="post-nav-label">Next</span>
+                  <span class="post-nav-title">{nextPost.title}</span>
+                </span>
+                <IconChevronRight class="inline-block flex-none" />
+              </a>
+            )
+          }
+        </nav>
+      </div>
+    </main>
 
-      <button
-        id="back-to-top"
-        class="focus-outline py-1 whitespace-nowrap hover:opacity-75"
-      >
-        <IconChevronLeft class="inline-block rotate-90" />
-        <span>Back to Top</span>
-      </button>
-    </div>
-
-    <hr class="my-6 border-dashed" />
-
-    <!-- Previous/Next Post Buttons -->
-    <div data-pagefind-ignore class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-      {
-        prevPost && (
-          <a
-            href={`/posts/${prevPost.slug}`}
-            class="flex w-full gap-1 hover:opacity-75"
-          >
-            <IconChevronLeft class="inline-block flex-none" />
-            <div>
-              <span>Previous Post</span>
-              <div class="text-sm text-accent/85">{prevPost.title}</div>
-            </div>
-          </a>
-        )
-      }
-      {
-        nextPost && (
-          <a
-            href={`/posts/${nextPost.slug}`}
-            class="flex w-full justify-end gap-1 text-right hover:opacity-75 sm:col-start-2"
-          >
-            <div>
-              <span>Next Post</span>
-              <div class="text-sm text-accent/85">{nextPost.title}</div>
-            </div>
-            <IconChevronRight class="inline-block flex-none" />
-          </a>
-        )
-      }
-    </div>
-  </main>
+    {
+      hasNotes && (
+        <aside class="post-col post-aside-right">
+          <MarginNotes count={footnoteCount} />
+        </aside>
+      )
+    }
+  </div>
   <Footer />
 </Layout>
 
-<script is:inline data-astro-rerun>
-  /** Create a progress indicator
-   *  at the top */
-  function createProgressBar() {
-    // Create the main container div
-    const progressContainer = document.createElement("div");
-    progressContainer.className =
-      "progress-container fixed top-0 z-10 h-1 w-full bg-background";
-
-    // Create the progress bar div
-    const progressBar = document.createElement("div");
-    progressBar.className = "progress-bar h-1 w-0 bg-accent";
-    progressBar.id = "myBar";
-
-    // Append the progress bar to the progress container
-    progressContainer.appendChild(progressBar);
-
-    // Append the progress container to the document body or any other desired parent element
-    document.body.appendChild(progressContainer);
+<style>
+  .post-wrap {
+    display: grid;
+    gap: 28px;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 28px 32px 80px;
+    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
   }
-  createProgressBar();
-
-  /** Update the progress bar
-   *  when user scrolls */
-  function updateScrollProgress() {
-    document.addEventListener("scroll", () => {
-      const winScroll =
-        document.body.scrollTop || document.documentElement.scrollTop;
-      const height =
-        document.documentElement.scrollHeight -
-        document.documentElement.clientHeight;
-      const scrolled = (winScroll / height) * 100;
-      if (document) {
-        const myBar = document.getElementById("myBar");
-        if (myBar) {
-          myBar.style.width = scrolled + "%";
-        }
-      }
-    });
+  .post-col {
+    min-width: 0;
   }
-  updateScrollProgress();
+  .post-main {
+    max-width: 820px;
+    width: 100%;
+    margin-inline: auto;
+  }
+  .back-link {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    text-decoration: none;
+    margin-bottom: 18px;
+  }
+  .back-link:hover {
+    color: var(--accent);
+  }
+  .post-title {
+    font-family: var(--font-serif);
+    font-size: 38px;
+    font-weight: 600;
+    line-height: 1.15;
+    color: var(--text-strong);
+    margin: 0 0 12px;
+  }
+  .post-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 30px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .meta-dot {
+    width: 4px;
+    height: 4px;
+    background: var(--accent);
+    flex: none;
+  }
 
-  /** Attaches links to headings in the document,
-   *  allowing sharing of sections easily */
-  function addHeadingLinks() {
-    const headings = Array.from(
-      document.querySelectorAll("h2, h3, h4, h5, h6")
-    );
-    for (const heading of headings) {
-      heading.classList.add("group");
-      const link = document.createElement("a");
-      link.className =
-        "heading-link ml-2 opacity-0 group-hover:opacity-100 focus:opacity-100";
-      link.href = "#" + heading.id;
+  .post-foot {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px dotted var(--divider);
+  }
+  .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    margin: 0 0 24px;
+    padding: 0;
+  }
+  .post-nav {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .post-nav-link {
+    display: flex;
+    gap: 8px;
+    color: var(--text-nav);
+    text-decoration: none;
+  }
+  .post-nav-link.next {
+    justify-content: flex-end;
+    text-align: right;
+    grid-column: 2;
+  }
+  .post-nav-link:hover .post-nav-title {
+    color: var(--accent);
+  }
+  .post-nav-label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+  .post-nav-title {
+    display: block;
+    font-family: var(--font-serif);
+    font-size: 15px;
+    color: var(--text-nav);
+  }
 
-      const span = document.createElement("span");
-      span.ariaHidden = "true";
-      span.innerText = "#";
-      link.appendChild(span);
-      heading.appendChild(link);
+  /* ≥861px: bring in the left ToC column (sticky) */
+  @media (min-width: 861px) {
+    .post-wrap {
+      grid-template-columns: 236px minmax(0, 1fr);
+    }
+    .post-wrap[data-toc="false"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .post-aside-left {
+      position: sticky;
+      top: 76px;
+    }
+    .post-main {
+      margin-inline: 0;
     }
   }
-  addHeadingLinks();
 
-  /** Attaches copy buttons to code blocks in the document,
-   * allowing users to copy code easily. */
+  /* ≥1101px: full three-column layout with the margin rail (sticky) */
+  @media (min-width: 1101px) {
+    .post-wrap {
+      grid-template-columns: 236px minmax(0, 1fr) 252px;
+    }
+    .post-wrap[data-toc="false"] {
+      grid-template-columns: minmax(0, 1fr) 252px;
+    }
+    .post-wrap[data-notes="false"] {
+      grid-template-columns: 236px minmax(0, 1fr);
+    }
+    .post-wrap[data-toc="false"][data-notes="false"] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .post-aside-right {
+      position: sticky;
+      top: 76px;
+    }
+  }
+
+  /* Below 1101px the rail collapses — notes fall back to inline footnotes */
+  @media (max-width: 1100px) {
+    .post-aside-right {
+      display: none;
+    }
+  }
+
+  @media (max-width: 860px) {
+    .post-wrap {
+      padding: 20px 16px 64px;
+    }
+    .post-title {
+      font-size: 30px;
+    }
+    .post-nav {
+      grid-template-columns: 1fr;
+    }
+    .post-nav-link.next {
+      grid-column: 1;
+      justify-content: flex-start;
+      text-align: left;
+    }
+  }
+</style>
+
+<!-- Post-page global styles: these target rehype-generated markup inside
+     <Content/> (footnote markers + footnotes section), which Astro scoped
+     styles cannot reach. -->
+<style is:global>
+  /* Inline footnote marker → bevelled sage badge */
+  .fn-marker {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    margin: 0 2px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    color: var(--bg);
+    background: var(--accent);
+    text-decoration: none;
+    vertical-align: middle;
+    border: 1px solid var(--line);
+    box-shadow:
+      inset -1px -1px 0 rgba(0, 0, 0, 0.4),
+      inset 1px 1px 0 rgba(255, 255, 255, 0.45);
+  }
+  .fn-marker.is-linked {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* The GFM footnotes section is the narrow-viewport fallback; on wide
+     screens it is hidden because the margin rail shows the same content. */
+  .margin-notes-source {
+    margin-top: 40px;
+    padding-top: 16px;
+    border-top: 1px dotted var(--divider);
+    font-size: 14px;
+    color: var(--text-note);
+  }
+  @media (min-width: 1101px) {
+    .post-wrap[data-notes="true"] .margin-notes-source {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  let ticking = false;
+
+  function updateProgress() {
+    const fill = document.getElementById("reading-progress");
+    if (!fill) return;
+    const doc = document.documentElement;
+    const max = doc.scrollHeight - doc.clientHeight;
+    const p = max > 0 ? Math.min(1, Math.max(0, doc.scrollTop / max)) : 0;
+    fill.style.width = (p * 100).toFixed(2) + "%";
+  }
+
+  function updateActiveHeading() {
+    const article = document.getElementById("article");
+    if (!article) return;
+    const heads = Array.from(
+      article.querySelectorAll<HTMLElement>("h1[id], h2[id], h3[id]")
+    );
+    let active: HTMLElement | null = null;
+    for (const el of heads) {
+      if (el.getBoundingClientRect().top <= 140) active = el;
+      else break;
+    }
+    if (!active && heads.length) active = heads[0];
+    document.querySelectorAll<HTMLElement>("[data-toc-link]").forEach(a => {
+      a.setAttribute(
+        "data-active",
+        String(!!active && a.getAttribute("data-toc-link") === active.id)
+      );
+    });
+  }
+
+  function onScroll() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      updateProgress();
+      updateActiveHeading();
+      ticking = false;
+    });
+  }
+
+  function buildMarginNotes() {
+    const stack = document.getElementById("notes-stack");
+    const source = document.querySelector(".margin-notes-source ol");
+    if (!stack || !source || stack.childElementCount) return;
+
+    source.querySelectorAll(":scope > li").forEach((li, i) => {
+      const match = li.id.match(/(\d+)$/);
+      const n = match ? match[1] : String(i + 1);
+      const clone = li.cloneNode(true) as HTMLElement;
+      clone
+        .querySelectorAll("[data-footnote-backref], .data-footnote-backref")
+        .forEach(b => b.remove());
+      const card = document.createElement("div");
+      card.className = "note-card";
+      card.setAttribute("data-note", n);
+      card.innerHTML =
+        '<div class="titlebar note-titlebar"><span class="note-badge">' +
+        n +
+        '</span><span class="mono-label note-kind">NOTE</span></div>' +
+        '<div class="note-body">' +
+        clone.innerHTML +
+        "</div>";
+      stack.appendChild(card);
+    });
+
+    wireHoverLinks();
+  }
+
+  function wireHoverLinks() {
+    const setLinked = (n: string | null, on: boolean) => {
+      if (!n) return;
+      document
+        .querySelectorAll('.fn-marker[data-note-ref="' + n + '"]')
+        .forEach(m => m.classList.toggle("is-linked", on));
+      const card = document.querySelector('.note-card[data-note="' + n + '"]');
+      if (card) card.classList.toggle("is-linked", on);
+    };
+    document.querySelectorAll(".fn-marker[data-note-ref]").forEach(m => {
+      const n = m.getAttribute("data-note-ref");
+      m.addEventListener("mouseenter", () => setLinked(n, true));
+      m.addEventListener("mouseleave", () => setLinked(n, false));
+    });
+    document.querySelectorAll(".note-card[data-note]").forEach(c => {
+      const n = c.getAttribute("data-note");
+      c.addEventListener("mouseenter", () => setLinked(n, true));
+      c.addEventListener("mouseleave", () => setLinked(n, false));
+    });
+  }
+
   function attachCopyButtons() {
-    const copyButtonLabel = "Copy";
-    const codeBlocks = Array.from(document.querySelectorAll("pre"));
+    document.querySelectorAll<HTMLElement>("pre").forEach(codeBlock => {
+      if (codeBlock.dataset.copyReady) return;
+      codeBlock.dataset.copyReady = "1";
 
-    for (const codeBlock of codeBlocks) {
       const wrapper = document.createElement("div");
       wrapper.style.position = "relative";
 
       const copyButton = document.createElement("button");
       copyButton.className =
-        "copy-code absolute right-3 -top-3 rounded bg-muted px-2 py-1 text-xs leading-4 text-foreground font-medium";
-      copyButton.innerHTML = copyButtonLabel;
+        "copy-code absolute right-3 -top-3 bg-surface px-2 py-1 text-xs leading-4 text-foreground";
+      copyButton.innerHTML = "Copy";
       codeBlock.setAttribute("tabindex", "0");
       codeBlock.appendChild(copyButton);
-
-      // wrap codebock with relative parent element
-      codeBlock?.parentNode?.insertBefore(wrapper, codeBlock);
+      codeBlock.parentNode?.insertBefore(wrapper, codeBlock);
       wrapper.appendChild(codeBlock);
 
       copyButton.addEventListener("click", async () => {
-        await copyCode(codeBlock, copyButton);
+        const code = codeBlock.querySelector("code");
+        await navigator.clipboard.writeText(code?.innerText ?? "");
+        copyButton.innerText = "Copied";
+        setTimeout(() => (copyButton.innerText = "Copy"), 700);
       });
-    }
-
-    async function copyCode(block, button) {
-      const code = block.querySelector("code");
-      const text = code?.innerText;
-
-      await navigator.clipboard.writeText(text ?? "");
-
-      // visual feedback that task is completed
-      button.innerText = "Copied";
-
-      setTimeout(() => {
-        button.innerText = copyButtonLabel;
-      }, 700);
-    }
-  }
-  attachCopyButtons();
-
-  /** Scrolls the document to the top when
-   * the "Back to Top" button is clicked. */
-  function backToTop() {
-    document.querySelector("#back-to-top")?.addEventListener("click", () => {
-      document.body.scrollTop = 0; // For Safari
-      document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
     });
   }
-  backToTop();
 
-  /* Go to page start after page swap */
-  document.addEventListener("astro:after-swap", () =>
-    window.scrollTo({ left: 0, top: 0, behavior: "instant" })
-  );
+  function init() {
+    updateProgress();
+    updateActiveHeading();
+    buildMarginNotes();
+    attachCopyButtons();
+  }
+
+  window.addEventListener("scroll", onScroll, { passive: true });
+  window.addEventListener("resize", onScroll, { passive: true });
+  document.addEventListener("astro:page-load", init);
 </script>

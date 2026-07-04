@@ -3,7 +3,7 @@
 ---
 
 <section
-  class="st-root mb-4 rounded-xl border border-[#2e3347] bg-[#222738] p-5 font-sans text-gray-100"
+  class="st-root mb-4 rounded-none border border-[#0e0c0a] bg-[#221d17] p-5 font-sans text-gray-100 shadow-[3px_3px_0_rgba(0,0,0,0.35)]"
 >
   <div class="st-controls">
     <span class="st-controls-label">Capacity mode:</span>
@@ -56,11 +56,11 @@
 <style is:global>
   .st-root {
     --st-bg-secondary: rgba(255, 255, 255, 0.04);
-    --st-text-primary: #e5e7eb;
-    --st-text-secondary: #9ca3af;
-    --st-text-muted: #6b7280;
+    --st-text-primary: #e9e0d0;
+    --st-text-secondary: #b7a98d;
+    --st-text-muted: #8a7d66;
     --st-border-soft: rgba(255, 255, 255, 0.08);
-    --st-info-color: #4a9ee0;
+    --st-info-color: #e8a33d;
   }
 
   .st-controls {
@@ -104,8 +104,8 @@
   }
 
   .st-tab-active {
-    background: rgba(74, 158, 224, 0.22);
-    color: #cfe6f8;
+    background: rgba(232, 163, 61, 0.22);
+    color: #ead9b4;
   }
 
   .st-mode-summary {
@@ -126,7 +126,7 @@
   .st-mode-copy {
     font-size: 0.9rem;
     line-height: 1.5;
-    color: #94a3b8;
+    color: #8a7d66;
   }
 
   .st-chart-shell {
@@ -134,7 +134,7 @@
     width: 100%;
     aspect-ratio: 760 / 710;
     min-height: 0;
-    background: #05060d;
+    background: #141009;
     border: 1px solid var(--st-border-soft);
     border-radius: 10px;
     padding: 10px;
@@ -155,7 +155,7 @@
     padding: 10px 12px;
     border-radius: 8px;
     border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(9, 12, 22, 0.95);
+    background: rgba(20, 16, 10, 0.96);
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
     color: var(--st-text-primary);
     font-size: 14px;
@@ -167,7 +167,7 @@
   .st-tooltip strong {
     display: block;
     margin-bottom: 6px;
-    color: #f8fafc;
+    color: #f5ecd8;
   }
 
   .st-visual-grid {
@@ -283,7 +283,7 @@
       label: "Helpful / Honest / Safe",
       angle: -0.885,
       radius: 162,
-      color: "#60a5fa",
+      color: "#6fa8d0",
       opacity: 0.22,
       tooltip:
         "<strong>Shared direction encodes:</strong>Helpful: 42%<br>Honest: 31%<br>Safe: 27%",
@@ -314,7 +314,7 @@
     {
       id: "helpful",
       label: "Helpful",
-      color: "#58b7ff",
+      color: "#6fa8d0",
       clusterId: 0,
       superAngleOffset: -0.035,
       superRadiusOffset: -4,
@@ -334,7 +334,7 @@
     {
       id: "safe",
       label: "Safe",
-      color: "#f7b34d",
+      color: "#e8a33d",
       clusterId: 0,
       superAngleOffset: 0.04,
       superRadiusOffset: -10,
@@ -450,7 +450,7 @@
     .attr("cy", cy)
     .attr("r", MAX_R)
     .attr("fill", "none")
-    .attr("stroke", "rgba(90, 98, 123, 0.35)")
+    .attr("stroke", "rgba(74, 64, 56, 0.35)")
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "4 7");
 
@@ -460,7 +460,7 @@
     .attr("cy", cy)
     .attr("r", 183)
     .attr("fill", "none")
-    .attr("stroke", "rgba(90, 98, 123, 0.18)")
+    .attr("stroke", "rgba(74, 64, 56, 0.18)")
     .attr("stroke-width", 1)
     .attr("stroke-dasharray", "3 7");
 
@@ -470,7 +470,7 @@
     .attr("y1", cy)
     .attr("x2", cx + 341)
     .attr("y2", cy)
-    .attr("stroke", "rgba(90, 98, 123, 0.26)")
+    .attr("stroke", "rgba(74, 64, 56, 0.26)")
     .attr("stroke-width", 1);
 
   axisLayer
@@ -479,14 +479,14 @@
     .attr("y1", cy - 341)
     .attr("x2", cx)
     .attr("y2", cy + 341)
-    .attr("stroke", "rgba(90, 98, 123, 0.26)")
+    .attr("stroke", "rgba(74, 64, 56, 0.26)")
     .attr("stroke-width", 1);
 
   axisLayer
     .append("text")
     .attr("x", cx + 348)
     .attr("y", cy + 4)
-    .attr("fill", "#6b7280")
+    .attr("fill", "#8a7d66")
     .attr("font-size", "14px")
     .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
     .text("d1");
@@ -495,7 +495,7 @@
     .append("text")
     .attr("x", cx + 6)
     .attr("y", cy - MAX_R - 16)
-    .attr("fill", "#6b7280")
+    .attr("fill", "#8a7d66")
     .attr("font-size", "14px")
     .attr("font-family", "ui-monospace, SFMono-Regular, Menlo, monospace")
     .text("d2");

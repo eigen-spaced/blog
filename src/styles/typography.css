@@ -10,12 +10,10 @@
     h3,
     h4,
     th {
-      @apply mb-3 text-foreground;
+      @apply mb-3;
+      color: var(--text-strong);
+      scroll-margin-top: 6rem;
     }
-
-    /* h3 { */
-    /*   @apply italic; */
-    /* } */
 
     p,
     strong,
@@ -24,7 +22,7 @@
     figcaption,
     table,
     code {
-      @apply text-foreground;
+      color: var(--text-body);
     }
 
     a {
@@ -81,10 +79,10 @@
 
     blockquote {
       @apply border-l-4 border-s-accent/80;
-      @apply bg-zinc-900/40;
-      @apply rounded-r-lg;
       @apply px-6 py-1;
-      @apply italic text-zinc-300;
+      @apply italic;
+      background: var(--surface);
+      color: var(--text-note);
     }
 
     details {
@@ -126,10 +124,30 @@
     }
   }
   .app-prose .katex {
-    color: wheat;
+    color: var(--accent);
   }
 
+  /* Equation block: inset well, centered serif-italic sage (spec §4 center) */
   .app-prose .katex-display {
     font-size: 1.3em;
+    margin: 1.5rem 0;
+    padding: 1.75rem 1rem;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    box-shadow: inset 1px 1px 0 rgba(255, 255, 255, 0.07);
+  }
+
+  /* Post article heading scale. Authored convention: `#` = section heading
+     (26px, dotted bottom rule), `##` = subsection (19px, no rule). The 38px
+     page-title H1 lives in the layout, outside #article. */
+  #article h1 {
+    font-size: 1.6rem;
+    line-height: 1.25;
+    padding-bottom: 0.3em;
+    border-bottom: 1px dotted var(--divider);
+  }
+  #article h2 {
+    font-size: 1.2rem;
+    line-height: 1.3;
   }
 }

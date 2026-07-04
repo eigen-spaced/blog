@@ -1,6 +1,10 @@
 ---
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
+import Layout from "@/layouts/Layout.astro";
+import Header from "@/components/Header.astro";
+import Footer from "@/components/Footer.astro";
+import { SITE } from "@/config";
 
 const imports = import.meta.glob(
   "/src/assets/vibes/*.{jpg,jpeg,png,webp,avif,gif}",
@@ -13,118 +17,94 @@ const imports = import.meta.glob(
 const images = Object.values(imports);
 ---
 
-<html lang="en">
-  <head>
-    <title>Vibes</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <style>
-      :root {
-        --gap: 14px;
-        --bg: #0c0c0c;
-        --text: #eaeaea;
-        --accent: #999;
+<Layout title={`Vibes | ${SITE.title}`} description="A wall of things that made me feel something.">
+  <Header />
+  <main id="main-content" class="vibes-main">
+    <div class="vibes-head">
+      <h1 class="vibes-title">Vibes</h1>
+      <span class="vibes-sub">{images.length} THINGS THAT MADE ME FEEL SOMETHING</span>
+    </div>
+    <div id="grid" class="masonry">
+      {
+        images.map(img => (
+          <figure class="item bevel-panel">
+            <Image src={img} alt="" loading="lazy" decoding="async" />
+          </figure>
+        ))
       }
+    </div>
+  </main>
+  <Footer />
+</Layout>
 
-      body {
-        margin: 0;
-        background: var(--bg);
-        color: var(--text);
-        font-family:
-          system-ui,
-          -apple-system,
-          sans-serif;
-      }
+<style>
+  .vibes-main {
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 48px 32px 88px;
+  }
+  .vibes-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .vibes-title {
+    font-family: var(--font-serif);
+    font-size: 34px;
+    font-weight: 600;
+    color: var(--text-strong);
+    margin: 0;
+  }
+  .vibes-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+  .masonry {
+    column-width: 280px;
+    column-gap: 14px;
+    column-fill: balance;
+  }
+  .item {
+    break-inside: avoid;
+    margin: 0 0 14px;
+    overflow: hidden;
+    background: var(--surface);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .item:hover {
+    transform: translate(-2px, -2px);
+    box-shadow:
+      inset 1px 1px 0 rgba(255, 255, 255, 0.08),
+      5px 5px 0 rgba(0, 0, 0, 0.4);
+  }
+  .item :global(img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
 
-      header {
-        max-width: 1400px;
-        margin: 1.5rem auto;
-        padding: 0 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
+  @media (max-width: 720px) {
+    .vibes-main {
+      padding: 32px 16px 64px;
+    }
+  }
+</style>
 
-      a.back {
-        color: var(--accent);
-        text-decoration: none;
-        font-size: 0.95rem;
-      }
-
-      a.back:hover {
-        text-decoration: underline;
-      }
-
-      .wrap {
-        max-width: 1400px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-      }
-
-      .masonry {
-        column-width: 280px;
-        column-gap: var(--gap);
-        column-fill: balance;
-      }
-
-      .item {
-        break-inside: avoid;
-        margin: 0 0 var(--gap);
-        overflow: hidden;
-        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
-        background: #111;
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.15s ease;
-      }
-
-      .item:hover {
-        transform: scale(1.01);
-        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
-      }
-
-      .item img {
-        display: block;
-        width: 100%;
-        height: auto;
-      }
-
-      h1 {
-        margin-bottom: 1rem;
-        font-size: 1.5rem;
-        font-weight: 600;
-      }
-    </style>
-  </head>
-
-  <body>
-    <header>
-      <a class="back" href="/">← Back</a>
-      <h1>Vibes</h1>
-      <span></span>
-    </header>
-
-    <main class="wrap">
-      <div id="grid" class="masonry">
-        {
-          images.map(img => (
-            <figure class="item">
-              <Image src={img} alt="" loading="lazy" decoding="async" />
-            </figure>
-          ))
-        }
-      </div>
-    </main>
-
-    <script is:inline>
-      (function () {
-        const g = document.getElementById("grid");
-        const nodes = Array.from(g.children);
-        for (let i = nodes.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          g.appendChild(nodes[j]);
-          nodes.splice(j, 1);
-        }
-      })();
-    </script>
-  </body>
-</html>
+<script is:inline>
+  (function () {
+    const g = document.getElementById("grid");
+    if (!g) return;
+    const nodes = Array.from(g.children);
+    for (let i = nodes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      g.appendChild(nodes[j]);
+      nodes.splice(j, 1);
+    }
+  })();
+</script>

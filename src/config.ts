@@ -4,7 +4,7 @@ export const SITE = {
   profile: "",
   desc: "I can't make up my mind on what I want to write about, so I write about everything ",
   title: "Point In Space",
-  ogImage: "astropaper-og.jpg",
+  ogImage: "", // falls back to the dynamically generated /og.png
   lightAndDarkMode: false,
   postPerIndex: 4,
   postPerPage: 8,

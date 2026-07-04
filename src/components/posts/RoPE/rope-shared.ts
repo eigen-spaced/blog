@@ -4,7 +4,7 @@ export const BASE = 10000;
 export const D = 8;
 export const HEAD_DIM = 64;
 export const EXAMPLE_VEC = [0.80, 0.35, -0.50, 0.70, 0.25, -0.40, 0.60, -0.15];
-export const PAIR_COLORS = ['#60a5fa', '#f472b6', '#34d399', '#fbbf24'];
+export const PAIR_COLORS = ['#e8a33d', '#d98ab0', '#6cc0a0', '#6fa8d0'];
 export const MOON_VEC: [number, number] = [0.60, 0.35];
 export const ASTRO_VEC: [number, number] = [0.45, -0.55];
 
@@ -40,8 +40,8 @@ export const VEC_64: number[] = [];
 })();
 
 // Button class helpers
-export const ACTIVE_BTN = 'px-4 py-1.5 rounded-lg text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 bg-indigo-500/20 border border-indigo-500/40 text-indigo-200';
-export const INACTIVE_BTN = 'px-4 py-1.5 rounded-lg text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 bg-[#2a3040] border border-[#2e3347] text-gray-400 hover:text-gray-200';
+export const ACTIVE_BTN = 'px-4 py-1.5 rounded-lg text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 bg-amber-500/20 border border-amber-500/40 text-amber-200';
+export const INACTIVE_BTN = 'px-4 py-1.5 rounded-lg text-[0.95rem] font-semibold cursor-pointer transition-all duration-200 bg-[#2a241d] border border-[#0e0c0a] text-[#8a7d66] hover:text-[#c8bda6]';
 
 // Sentence token rendering helper
 export function renderTokens(
